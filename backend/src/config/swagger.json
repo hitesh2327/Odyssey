@@ -1,0 +1,612 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "AI-Powered Interview Preparation Platform API",
+    "version": "1.0.0",
+    "description": "Production-grade backend API for AI-Powered Interview Preparation Platform."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Get current status of backend API.",
+        "responses": {
+          "200": {
+            "description": "System is operational",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "status": { "type": "string", "example": "UP" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "summary": "Register user",
+        "description": "Register a new user in the application.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "password"],
+                "properties": {
+                  "name": { "type": "string", "example": "Hitesh" },
+                  "email": { "type": "string", "format": "email", "example": "hitesh@example.com" },
+                  "password": { "type": "string", "format": "password", "minLength": 8, "example": "Password@123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registration successful, returns JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "token": { "type": "string", "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string", "format": "uuid", "example": "44bb2776-69d5-47e1-8b36-ff40df98db18" },
+                        "name": { "type": "string", "example": "Hitesh" },
+                        "email": { "type": "string", "example": "hitesh@example.com" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure or email already taken"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "summary": "Login user",
+        "description": "Authenticate user with email and password.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "hitesh@example.com" },
+                  "password": { "type": "string", "format": "password", "example": "Password@123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful, returns JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "token": { "type": "string", "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string", "format": "uuid", "example": "44bb2776-69d5-47e1-8b36-ff40df98db18" },
+                        "name": { "type": "string", "example": "Hitesh" },
+                        "email": { "type": "string", "example": "hitesh@example.com" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "summary": "Logout user",
+        "description": "Stateless logout, returns success message.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Logout confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Logged out successfully" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (missing or invalid token)"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "summary": "Current User Profile",
+        "description": "Retrieve information about the currently logged in user.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string", "format": "uuid", "example": "44bb2776-69d5-47e1-8b36-ff40df98db18" },
+                        "name": { "type": "string", "example": "Hitesh" },
+                        "email": { "type": "string", "example": "hitesh@example.com" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (missing or invalid token)"
+          }
+        }
+      }
+    },
+    "/api/v1/topics": {
+      "get": {
+        "summary": "Get All Topics",
+        "description": "Fetch all active domain topics, sorted alphabetically by name. Supports optional search filter.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Optional search term for filtering topic names (case-insensitive, partial matching)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of active topics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string", "format": "uuid", "example": "44bb2776-69d5-47e1-8b36-ff40df98db18" },
+                          "name": { "type": "string", "example": "JavaScript" },
+                          "description": { "type": "string", "example": "JavaScript interview preparation" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (missing or invalid token)"
+          }
+        }
+      }
+    },
+    "/api/v1/topics/{id}": {
+      "get": {
+        "summary": "Get Topic By Id",
+        "description": "Retrieve details of a specific active topic by its UUID.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The unique UUID of the topic",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Topic details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string", "format": "uuid", "example": "44bb2776-69d5-47e1-8b36-ff40df98db18" },
+                        "name": { "type": "string", "example": "JavaScript" },
+                        "description": { "type": "string", "example": "JavaScript interview preparation" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error (invalid UUID format)"
+          },
+          "401": {
+            "description": "Unauthorized (missing or invalid token)"
+          },
+          "404": {
+            "description": "Topic not found / Unknown topic",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "message": { "type": "string", "example": "Invalid topic. Please select a valid topic." }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions": {
+      "post": {
+        "summary": "Create Assessment Session",
+        "description": "Create a new interview assessment session for a specified topic and difficulty. Generates and stores 5 questions.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["topicId", "difficulty"],
+                "properties": {
+                  "topicId": { "type": "string", "format": "uuid", "example": "44bb2776-69d5-47e1-8b36-ff40df98db18" },
+                  "difficulty": { "type": "string", "enum": ["BEGINNER", "INTERMEDIATE", "ADVANCED"], "example": "INTERMEDIATE" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Session created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "sessionId": { "type": "string", "format": "uuid", "example": "7c14a480-1a74-4b5f-9e7b-c3fb2d2e1b12" },
+                        "status": { "type": "string", "example": "IN_PROGRESS" },
+                        "totalQuestions": { "type": "integer", "example": 5 },
+                        "currentQuestion": { "type": "integer", "example": 1 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "404": {
+            "description": "Invalid topic",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "message": { "type": "string", "example": "Invalid topic. Please select a valid topic." }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sessionId}": {
+      "get": {
+        "summary": "Resume Assessment Session",
+        "description": "Fetch status details to resume an existing assessment session.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session details for resume",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "sessionId": { "type": "string", "format": "uuid", "example": "7c14a480-1a74-4b5f-9e7b-c3fb2d2e1b12" },
+                        "status": { "type": "string", "example": "IN_PROGRESS" },
+                        "currentQuestionOrder": { "type": "integer", "example": 3 },
+                        "totalQuestions": { "type": "integer", "example": 5 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sessionId}/questions/{order}": {
+      "get": {
+        "summary": "Get Question By Order",
+        "description": "Retrieve a specific question of a session by its order index (1 to 5).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "order",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Question details and existing answer if submitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string", "format": "uuid", "example": "9f828e1d-c584-45b6-bc25-33df4d5386fa" },
+                        "questionOrder": { "type": "integer", "example": 3 },
+                        "questionText": { "type": "string", "example": "Explain closures in JavaScript." },
+                        "existingAnswer": { "type": "string", "nullable": true, "example": "A closure is the combination of a function bundled together with references to its surrounding state..." }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "404": {
+            "description": "Question or Session not found"
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sessionId}/progress": {
+      "get": {
+        "summary": "Get Session Progress",
+        "description": "Get current progress parameters of an assessment session.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session progress statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "answered": { "type": "integer", "example": 3 },
+                        "total": { "type": "integer", "example": 5 },
+                        "currentQuestion": { "type": "integer", "example": 4 },
+                        "status": { "type": "string", "example": "IN_PROGRESS" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        }
+      }
+    },
+    "/api/v1/answers": {
+      "post": {
+        "summary": "Submit Answer",
+        "description": "Create or update an answer response for a question inside an assessment session. Updates progress order.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["sessionId", "questionId", "answerText"],
+                "properties": {
+                  "sessionId": { "type": "string", "format": "uuid", "example": "7c14a480-1a74-4b5f-9e7b-c3fb2d2e1b12" },
+                  "questionId": { "type": "string", "format": "uuid", "example": "9f828e1d-c584-45b6-bc25-33df4d5386fa" },
+                  "answerText": { "type": "string", "example": "Closures allow nested functions to access variables from outer scopes." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Answer saved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Answer saved successfully" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or Question-Session mismatch"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "404": {
+            "description": "Session or Question not found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

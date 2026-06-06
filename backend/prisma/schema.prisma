@@ -1,0 +1,155 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum InteractionType {
+  QUESTION_GENERATION
+  HINT_REQUEST
+  ANSWER_EVALUATION
+}
+
+model User {
+  id           String              @id @default(uuid())
+  email        String              @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  sessions     AssessmentSession[]
+  aiAssistance AIAssistance[]
+
+  @@map("users")
+}
+
+model Topic {
+  id          String              @id @default(uuid())
+  name        String              @unique
+  description String?
+  isActive    Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  sessions    AssessmentSession[]
+  questions   Question[]
+
+  @@map("topics")
+}
+
+model AssessmentSession {
+  id                       String          @id @default(uuid())
+  userId                   String
+  topicId                  String
+  status                   SessionStatus   @default(IN_PROGRESS)
+  difficulty               Difficulty
+  score                    Int?
+  feedback                 String?
+  currentQuestionOrder     Int             @default(1)
+  totalQuestions           Int             @default(5)
+  questionGenerationPrompt String?
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  user                     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic                    Topic           @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  questions                Question[]
+  answers                  Answer[]
+  aiAssistance             AIAssistance[]
+  aiInteractions           AIInteraction[]
+
+  @@index([userId])
+  @@index([topicId])
+  @@map("assessment_sessions")
+}
+
+model Question {
+  id            String            @id @default(uuid())
+  sessionId     String
+  topicId       String
+  text          String
+  difficulty    Difficulty
+  correctAnswer String?
+  questionOrder Int
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  session       AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  topic         Topic             @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  answers       Answer[]
+  aiAssistance  AIAssistance[]
+  aiInteractions AIInteraction[]
+
+  @@unique([sessionId, questionOrder])
+  @@index([sessionId])
+  @@index([topicId])
+  @@map("questions")
+}
+
+model Answer {
+  id           String            @id @default(uuid())
+  sessionId    String
+  questionId   String
+  userResponse String
+  feedback     String?
+  score        Int?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  session      AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question     Question          @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, questionId])
+  @@index([sessionId])
+  @@index([questionId])
+  @@map("answers")
+}
+
+model AIAssistance {
+  id         String            @id @default(uuid())
+  userId     String
+  sessionId  String
+  questionId String
+  prompt     String
+  response   String
+  tokensUsed Int?
+  createdAt  DateTime          @default(now())
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session    AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question   Question          @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, questionId])
+  @@index([userId])
+  @@index([sessionId])
+  @@index([questionId])
+  @@map("ai_assistance")
+}
+
+model AIInteraction {
+  id         String            @id @default(uuid())
+  sessionId  String
+  questionId String?
+  type       InteractionType
+  prompt     String
+  response   String
+  tokensUsed Int?
+  modelName  String?           @db.VarChar(100)
+  createdAt  DateTime          @default(now())
+  session    AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question   Question?         @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([questionId])
+  @@map("ai_interactions")
+}
