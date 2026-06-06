@@ -16,6 +16,13 @@ export class QuestionsService {
       throw new ApiError(403, 'Access denied');
     }
 
+    if (!session.startedAt) {
+      await prisma.assessmentSession.update({
+        where: { id: sessionId },
+        data: { startedAt: new Date() },
+      });
+    }
+
     // Dynamic question limit check
     if (order < 1 || order > session.totalQuestions) {
       throw new ApiError(404, 'Question not found');

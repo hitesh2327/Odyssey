@@ -547,6 +547,134 @@
         }
       }
     },
+    "/api/v1/sessions/{sessionId}/complete": {
+      "post": {
+        "summary": "Complete Assessment Session",
+        "description": "Atomically marks an active assessment session as COMPLETED if all questions have been answered.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Assessment completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Assessment completed successfully" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error, duplicate request, or incomplete questions"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sessionId}/summary": {
+      "get": {
+        "summary": "Get Session Summary",
+        "description": "Retrieve the metrics, statistics, question log, user answers, and AI assistance telemetry for a completed assessment session.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session summary details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "sessionId": { "type": "string", "format": "uuid", "example": "7c14a480-1a74-4b5f-9e7b-c3fb2d2e1b12" },
+                        "status": { "type": "string", "example": "COMPLETED" },
+                        "topic": { "type": "string", "example": "JavaScript" },
+                        "difficulty": { "type": "string", "example": "INTERMEDIATE" },
+                        "startedAt": { "type": "string", "format": "date-time", "example": "2026-06-07T02:00:00.000Z" },
+                        "completedAt": { "type": "string", "format": "date-time", "example": "2026-06-07T02:20:00.000Z" },
+                        "statistics": {
+                          "type": "object",
+                          "properties": {
+                            "totalQuestions": { "type": "integer", "example": 5 },
+                            "answeredQuestions": { "type": "integer", "example": 5 },
+                            "aiAssistUsed": { "type": "integer", "example": 2 },
+                            "completionPercentage": { "type": "number", "example": 100 },
+                            "durationInMinutes": { "type": "integer", "example": 20 }
+                          }
+                        },
+                        "questions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "questionId": { "type": "string", "format": "uuid", "example": "9f828e1d-c584-45b6-bc25-33df4d5386fa" },
+                              "questionOrder": { "type": "integer", "example": 1 },
+                              "questionText": { "type": "string", "example": "Explain closures in JavaScript." },
+                              "answer": { "type": "string", "example": "Closures allow nested functions to access outer scope variables." },
+                              "usedAI": { "type": "boolean", "example": true },
+                              "aiUsageCount": { "type": "integer", "example": 1 }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Assessment is not completed yet"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        }
+      }
+    },
     "/api/v1/answers": {
       "post": {
         "summary": "Submit Answer",
