@@ -598,6 +598,73 @@
           }
         }
       }
+    },
+    "/api/v1/questions/{questionId}/assist": {
+      "post": {
+        "summary": "Ask AI Assistance",
+        "description": "Request AI guidance (hints, suggested approach, related concepts) for a specific question. Users can request this once per question.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "questionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI assistance details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "hint": { "type": "string", "example": "Think about variable scopes in JavaScript..." },
+                        "guidance": { "type": "string", "example": "Focus on how the nested function retains scope access..." },
+                        "suggestedApproach": { "type": "string", "example": "Write an outer function and return an inner function..." },
+                        "relatedConcepts": {
+                          "type": "array",
+                          "items": { "type": "string" },
+                          "example": ["Scope", "Lexical Scoping", "Execution Context"]
+                        },
+                        "learningResources": {
+                          "type": "array",
+                          "items": { "type": "string" },
+                          "example": ["MDN Closures documentation"]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "AI assistance already used, or session not active"
+          },
+          "403": {
+            "description": "Access denied (session ownership mismatch)"
+          },
+          "404": {
+            "description": "Question or Session not found"
+          },
+          "503": {
+            "description": "OpenAI service unavailable"
+          }
+        }
+      }
     }
   },
   "components": {

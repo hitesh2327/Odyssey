@@ -33,7 +33,6 @@ model User {
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
   sessions     AssessmentSession[]
-  aiAssistance AIAssistance[]
 
   @@map("users")
 }
@@ -118,36 +117,35 @@ model Answer {
 
 model AIAssistance {
   id         String            @id @default(uuid())
-  userId     String
   sessionId  String
   questionId String
-  prompt     String
-  response   String
-  tokensUsed Int?
+  aiResponse Json
+  usedAt     DateTime          @default(now())
   createdAt  DateTime          @default(now())
-  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   session    AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   question   Question          @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@unique([sessionId, questionId])
-  @@index([userId])
   @@index([sessionId])
   @@index([questionId])
   @@map("ai_assistance")
 }
 
 model AIInteraction {
-  id         String            @id @default(uuid())
-  sessionId  String
-  questionId String?
-  type       InteractionType
-  prompt     String
-  response   String
-  tokensUsed Int?
-  modelName  String?           @db.VarChar(100)
-  createdAt  DateTime          @default(now())
-  session    AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  question   Question?         @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  id               String            @id @default(uuid())
+  sessionId        String
+  questionId       String?
+  type             InteractionType
+  prompt           String
+  response         String
+  tokensUsed       Int?
+  promptTokens     Int?
+  completionTokens Int?
+  modelName        String?           @db.VarChar(100)
+  promptVersion    String?
+  createdAt        DateTime          @default(now())
+  session          AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question         Question?         @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
   @@index([questionId])

@@ -12,6 +12,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url({ message: 'DATABASE_URL must be a valid PostgreSQL connection string' }),
   JWT_SECRET: z.string().min(8, { message: 'JWT_SECRET must be at least 8 characters long' }),
   OPENAI_API_KEY: z.string().optional(),
+  OPENAI_MODEL: z.string().default('gpt-4o-mini'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 });
 

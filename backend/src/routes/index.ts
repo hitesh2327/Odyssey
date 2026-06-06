@@ -4,6 +4,7 @@ import { topicsRouter } from '../modules/topics/topics.routes';
 import { sessionsRouter } from '../modules/sessions/sessions.routes';
 import { questionsRouter } from '../modules/questions/questions.routes';
 import { answersRouter } from '../modules/answers/answers.routes';
+import { aiAssistanceRouter } from '../modules/ai-assistance/ai-assistance.routes';
 
 const router = Router();
 
@@ -21,5 +22,6 @@ router.use('/topics', topicsRouter);
 router.use('/sessions', sessionsRouter);
 router.use('/sessions/:sessionId/questions', questionsRouter);
 router.use('/answers', answersRouter);
+router.use('/questions', aiAssistanceRouter);
 
 export default router;
