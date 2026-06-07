@@ -1,6 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { errorMiddleware } from './middleware/error.middleware';
 import apiRouter from './routes';
@@ -13,8 +14,13 @@ const app = express();
 // Enable Helmet for setting security-related HTTP headers
 app.use(helmet());
 
-// Enable Cross-Origin Resource Sharing
-app.use(cors());
+// Enable Cross-Origin Resource Sharing with credentials support
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    credentials: true,
+  })
+);
 
 // Configure Rate Limiter to guard against Brute Force/DDoS
 const limiter = rateLimit({
@@ -29,7 +35,8 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Built-in body parsers for JSON and URL-encoded queries
+// Built-in body parsers for JSON and URL-encoded queries and cookies
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

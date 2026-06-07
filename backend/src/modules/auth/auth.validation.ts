@@ -27,3 +27,11 @@ export const loginSchema = z.object({
       .min(1, 'Password is required'),
   }),
 });
+
+export const googleAuthSchema = z.object({
+  body: z.object({
+    idToken: z
+      .string({ required_error: 'idToken is required' })
+      .min(1, 'idToken cannot be empty'),
+  }),
+});
