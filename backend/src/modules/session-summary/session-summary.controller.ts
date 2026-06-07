@@ -33,6 +33,21 @@ export class SessionSummaryController {
       next(error);
     }
   }
+  public async getEvaluationStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { sessionId } = req.params;
+      const userId = (req as any).user.id;
+
+      const status = await sessionSummaryService.getEvaluationStatus(userId, sessionId);
+
+      res.status(200).json({
+        success: true,
+        data: { evaluationStatus: status },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const sessionSummaryController = new SessionSummaryController();

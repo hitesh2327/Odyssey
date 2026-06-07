@@ -11,6 +11,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:push": "prisma db push",
     "prisma:seed": "ts-node-dev prisma/seed.ts"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
     "express": "^4.19.2",
     "express-rate-limit": "^7.2.0",
     "google-auth-library": "^10.7.0",
+    "groq-sdk": "^1.2.1",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "openai": "^4.47.1",

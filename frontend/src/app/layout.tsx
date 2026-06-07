@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 import { AuthProvider } from '../components/auth-provider';
+import Providers from '../components/providers/query-provider';
+import { ThemeProvider } from '../providers/theme-provider';
+import { GlobalLoader } from '../components/ui/global-loader';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -15,7 +18,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased" suppressHydrationWarning>
-        <AuthProvider>{children}</AuthProvider>
+        <GlobalLoader />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <Providers>
+            <AuthProvider>{children}</AuthProvider>
+          </Providers>
+        </ThemeProvider>
       </body>
     </html>
   );

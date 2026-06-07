@@ -1,9 +1,14 @@
 import { prisma } from '../../lib/prisma';
 import { ApiError } from '../../utils/ApiError';
 import { SessionSummaryResponse } from './session-summary.types';
+import { evaluationService } from '../evaluation/evaluation.service';
+import { logger } from '../../lib/logger';
 
 export class SessionSummaryService {
   public async completeSession(userId: string, sessionId: string): Promise<void> {
+    try {
+      
+    
     await prisma.$transaction(async (tx) => {
       // 1. Validate Session Exists
       const session = await tx.assessmentSession.findUnique({
@@ -33,15 +38,41 @@ export class SessionSummaryService {
         throw new ApiError(400, 'Complete all questions before finishing the assessment.');
       }
 
-      // 5. Update status and timestamp
+      // 5. Update status, evaluationStatus, and timestamp
       await tx.assessmentSession.update({
         where: { id: sessionId },
         data: {
           status: 'COMPLETED',
+          evaluationStatus: 'PROCESSING',
           completedAt: new Date(),
         },
       });
     });
+
+    // 6. Trigger Background AI Evaluation
+    evaluationService.evaluateSessionBackground(sessionId).catch((err) => {
+      logger.error(`Background evaluation failed to start for session ${sessionId}:`, err);
+    });
+    } catch (error) {
+      logger.error(`Failed to complete session ${sessionId}:`, error);
+    }
+  }
+
+  public async getEvaluationStatus(userId: string, sessionId: string): Promise<string> {
+    const session = await prisma.assessmentSession.findUnique({
+      where: { id: sessionId },
+      select: { userId: true, evaluationStatus: true },
+    });
+
+    if (!session) {
+      throw new ApiError(404, 'Session not found');
+    }
+
+    if (session.userId !== userId) {
+      throw new ApiError(403, 'Access denied');
+    }
+
+    return session.evaluationStatus;
   }
 
   public async getSessionSummary(userId: string, sessionId: string): Promise<SessionSummaryResponse> {
@@ -92,6 +123,18 @@ export class SessionSummaryService {
       durationInMinutes = 0; // Fallback to 0 if completed but not started
     }
 
+    // Calculate performance level
+    let performanceLevel = 'Pending';
+    if (session.evaluationStatus === 'COMPLETED' && session.score !== null) {
+      if (session.score >= 90) performanceLevel = 'Excellent';
+      else if (session.score >= 80) performanceLevel = 'Strong';
+      else if (session.score >= 70) performanceLevel = 'Good';
+      else if (session.score >= 60) performanceLevel = 'Average';
+      else performanceLevel = 'Needs Improvement';
+    } else if (session.evaluationStatus === 'FAILED') {
+      performanceLevel = 'Failed';
+    }
+
     // 5. Map Questions Summary
     const questionsSummary = session.questions.map((q) => {
       // Find the user answer for this session/question
@@ -106,12 +149,22 @@ export class SessionSummaryService {
         answer: answerRecord ? answerRecord.userResponse : '',
         usedAI: !!aiRecord,
         aiUsageCount: aiRecord ? 1 : 0,
+        score: answerRecord?.score ?? null,
+        feedback: answerRecord?.feedback ?? null,
+        expectedConcepts: answerRecord?.expectedConcepts ?? [],
+        breakdown: answerRecord?.breakdown ?? null,
+        strengths: answerRecord?.strengths ?? [],
+        improvements: answerRecord?.improvements ?? [],
       };
     });
 
     return {
       sessionId: session.id,
       status: session.status,
+      evaluationStatus: session.evaluationStatus,
+      overallScore: session.score,
+      overallFeedback: session.feedback,
+      performanceLevel,
       topic: session.topic.name,
       difficulty: session.difficulty,
       startedAt: session.startedAt,

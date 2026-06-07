@@ -19,6 +19,18 @@ services:
       timeout: 5s
       retries: 5
 
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: interview_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
   backend:
     build:
       context: ./backend
@@ -32,9 +44,29 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/interview_db?schema=public
       - JWT_SECRET=super_secret_jwt_key_please_change_in_production
       - NODE_ENV=production
+      - GROQ_API_KEY=${GROQ_API_KEY}
     command: sh -c "npx prisma migrate deploy && node dist/prisma/seed.js && node dist/server.js"
     depends_on:
       postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: interview_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:5000/api/v1
+    depends_on:
+      backend:
         condition: service_healthy
 
 volumes:

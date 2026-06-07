@@ -1,4 +1,4 @@
-import { openai } from '../../lib/openai';
+import { groq } from '../../lib/groq';
 import { logger } from '../../lib/logger';
 import { config } from '../../config';
 
@@ -24,10 +24,10 @@ Return your response as a JSON object matching this schema:
 }
 Do not include any extra text outside the JSON markdown format. Return only valid JSON.`;
 
-    if (config.OPENAI_API_KEY && config.OPENAI_API_KEY !== 'dummy_key') {
+    if (config.GROQ_API_KEY && config.GROQ_API_KEY !== 'dummy_key') {
       try {
-        const response = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
+        const response = await groq.chat.completions.create({
+          model: config.GROQ_MODEL || 'llama-3.3-70b-versatile',
           messages: [{ role: 'user', content: prompt }],
           response_format: { type: 'json_object' },
         });
@@ -41,14 +41,14 @@ Do not include any extra text outside the JSON markdown format. Return only vali
               text: q.question || q.text || '',
             }));
             if (formatted.length === 5) {
-              logger.info(`Successfully generated 5 questions via OpenAI for ${topicName}`);
+              logger.info(`Successfully generated 5 questions via Groq for ${topicName}`);
               return { questions: formatted, prompt };
             }
           }
         }
       } catch (err: any) {
         logger.error(
-          `OpenAI question generation failed: ${err.message}. Falling back to topic-specific placeholders.`,
+          `Groq question generation failed: ${err.message}. Falling back to topic-specific placeholders.`,
         );
       }
     }

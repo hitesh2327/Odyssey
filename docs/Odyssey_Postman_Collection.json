@@ -1,0 +1,255 @@
+{
+  "info": {
+    "name": "Odyssey Interview Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"Test User\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            }
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Topics",
+      "item": [
+        {
+          "name": "Get Topics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/topics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "topics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sessions",
+      "item": [
+        {
+          "name": "Create Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "sessions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topicId\": \"uuid\",\n  \"difficulty\": \"INTERMEDIATE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Session Progress",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sessions/{{sessionId}}/progress",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "sessions", "{{sessionId}}", "progress"]
+            }
+          }
+        },
+        {
+          "name": "Complete Session",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sessions/{{sessionId}}/complete",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "sessions", "{{sessionId}}", "complete"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Questions & Answers",
+      "item": [
+        {
+          "name": "Get Question",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sessions/{{sessionId}}/questions?order=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "sessions", "{{sessionId}}", "questions"],
+              "query": [
+                { "key": "order", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Submit Answer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/answers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "answers"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionId\": \"uuid\",\n  \"questionId\": \"uuid\",\n  \"answerText\": \"This is my answer.\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Assistance",
+      "item": [
+        {
+          "name": "Request AI Hint",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/questions/{{questionId}}/assist",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "questions", "{{questionId}}", "assist"]
+            }
+          }
+        },
+        {
+          "name": "Stream AI Hint (SSE)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/questions/{{questionId}}/assist/stream",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "questions", "{{questionId}}", "assist", "stream"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard & History",
+      "item": [
+        {
+          "name": "Get Dashboard Overview",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Get History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/history?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "history"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Session Summary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sessions/{{sessionId}}/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "sessions", "{{sessionId}}", "summary"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "sessionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "questionId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

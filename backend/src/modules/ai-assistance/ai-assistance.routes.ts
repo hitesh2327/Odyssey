@@ -13,4 +13,11 @@ router.post(
   aiAssistanceController.requestAssistance,
 );
 
+router.get(
+  '/:questionId/assist/stream',
+  authMiddleware,
+  validate(getAssistSchema),
+  aiAssistanceController.streamAssistance,
+);
+
 export { router as aiAssistanceRouter };

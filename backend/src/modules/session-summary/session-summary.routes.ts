@@ -20,4 +20,11 @@ router.get(
   sessionSummaryController.getSessionSummary,
 );
 
+router.get(
+  '/:sessionId/evaluation-status',
+  authMiddleware,
+  validate(sessionParamsSchema),
+  sessionSummaryController.getEvaluationStatus,
+);
+
 export { router as sessionSummaryRouter };

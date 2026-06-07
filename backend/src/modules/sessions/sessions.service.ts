@@ -5,14 +5,23 @@ import { Difficulty } from '@prisma/client';
 
 export class SessionsService {
   public async createSession(userId: string, topicId: string, difficulty: Difficulty) {
-    // Validate that the topic exists
-    const topic = await prisma.topic.findUnique({
-      where: { id: topicId },
+    // Validate that the topic exists, or create it if topicId is a new name
+    let topic = await prisma.topic.findFirst({
+      where: {
+        OR: [
+          { id: topicId },
+          { name: { equals: topicId, mode: 'insensitive' } },
+        ],
+      },
     });
 
     if (!topic) {
-      throw new ApiError(404, 'Invalid topic. Please select a valid topic.');
+      topic = await prisma.topic.create({
+        data: { name: topicId },
+      });
     }
+
+    const actualTopicId = topic.id;
 
     // Generate questions using the QuestionGeneratorService
     const { questions, prompt } = await questionGeneratorService.generateQuestions(
@@ -25,7 +34,7 @@ export class SessionsService {
       const newSession = await tx.assessmentSession.create({
         data: {
           userId,
-          topicId,
+          topicId: actualTopicId,
           difficulty,
           status: 'IN_PROGRESS',
           totalQuestions: 5,
@@ -36,7 +45,7 @@ export class SessionsService {
 
       const questionsData = questions.map((q) => ({
         sessionId: newSession.id,
-        topicId,
+        topicId: actualTopicId,
         text: q.text,
         difficulty,
         questionOrder: q.order,

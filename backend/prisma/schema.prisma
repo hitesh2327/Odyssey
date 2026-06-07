@@ -62,6 +62,7 @@ model AssessmentSession {
   difficulty               Difficulty
   score                    Int?
   feedback                 String?
+  evaluationStatus         String          @default("PENDING")
   currentQuestionOrder     Int             @default(1)
   totalQuestions           Int             @default(5)
   questionGenerationPrompt String?
@@ -104,16 +105,20 @@ model Question {
 }
 
 model Answer {
-  id           String            @id @default(uuid())
-  sessionId    String
-  questionId   String
-  userResponse String
-  feedback     String?
-  score        Int?
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  session      AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  question     Question          @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  id               String            @id @default(uuid())
+  sessionId        String
+  questionId       String
+  userResponse     String
+  feedback         String?
+  score            Int?
+  expectedConcepts String[]
+  breakdown        Json?
+  strengths        String[]
+  improvements     String[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  session          AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question         Question          @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@unique([sessionId, questionId])
   @@index([sessionId])
