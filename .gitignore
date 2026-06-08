@@ -1,7 +1,25 @@
+# Dependencies
 node_modules/
+
+# Production/Build outputs
 dist/
+.next/
+out/
+build/
+coverage/
+
+# Environment files
 .env
 .env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+
+# System and logs
 *.log
+.DS_Store
 .system_generated/
-.next/
