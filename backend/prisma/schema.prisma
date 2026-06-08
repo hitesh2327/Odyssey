@@ -25,6 +25,11 @@ enum InteractionType {
   ANSWER_EVALUATION
 }
 
+enum AssessmentType {
+  SINGLE_TOPIC
+  MULTI_TOPIC
+}
+
 model User {
   id              String              @id @default(uuid())
   email           String              @unique
@@ -48,8 +53,9 @@ model Topic {
   isActive    Boolean             @default(true)
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
-  sessions    AssessmentSession[]
-  questions   Question[]
+  sessions      AssessmentSession[]
+  questions     Question[]
+  sessionTopics SessionTopic[]
 
   @@map("topics")
 }
@@ -58,6 +64,7 @@ model AssessmentSession {
   id                       String          @id @default(uuid())
   userId                   String
   topicId                  String
+  assessmentType           AssessmentType  @default(SINGLE_TOPIC)
   status                   SessionStatus   @default(IN_PROGRESS)
   difficulty               Difficulty
   score                    Int?
@@ -76,10 +83,25 @@ model AssessmentSession {
   answers                  Answer[]
   aiAssistance             AIAssistance[]
   aiInteractions           AIInteraction[]
+  sessionTopics            SessionTopic[]
 
   @@index([userId])
   @@index([topicId])
   @@map("assessment_sessions")
+}
+
+model SessionTopic {
+  id                 String            @id @default(uuid())
+  sessionId          String
+  topicId            String
+  topicNameSnapshot  String
+  session            AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  topic              Topic             @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, topicId])
+  @@index([sessionId])
+  @@index([topicId])
+  @@map("session_topics")
 }
 
 model Question {

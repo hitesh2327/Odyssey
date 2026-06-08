@@ -1,8 +1,14 @@
 import { prisma } from '../../lib/prisma';
 import { ApiError } from '../../utils/ApiError';
+import { cacheService } from '../../services/cache.service';
+import { config } from '../../config';
 
 export class DashboardService {
   public async getOverview(userId: string) {
+    const cacheKey = `odyssey:dashboard:${userId}`;
+    const cachedData = await cacheService.get<any>(cacheKey);
+    if (cachedData) return cachedData;
+
     const totalAssessments = await prisma.assessmentSession.count({ where: { userId } });
     const completedAssessments = await prisma.assessmentSession.count({ where: { userId, status: 'COMPLETED' } });
     const inProgressAssessments = await prisma.assessmentSession.count({ where: { userId, status: 'IN_PROGRESS' } });
@@ -49,7 +55,7 @@ export class DashboardService {
       },
     });
 
-    return {
+    const result = {
       totalAssessments,
       completedAssessments,
       inProgressAssessments,
@@ -64,9 +70,16 @@ export class DashboardService {
         lastActive: s.updatedAt,
       })),
     };
+
+    await cacheService.set(cacheKey, result, config.REDIS_TTL_DASHBOARD, userId);
+    return result;
   }
 
   public async getHistory(userId: string, page = 1, limit = 10) {
+    const cacheKey = `odyssey:history:${userId}:${page}:${limit}:all:all:all`;
+    const cachedData = await cacheService.get<any>(cacheKey);
+    if (cachedData) return cachedData;
+
     const skip = (page - 1) * limit;
 
     const [items, total] = await Promise.all([
@@ -90,7 +103,7 @@ export class DashboardService {
       prisma.assessmentSession.count({ where: { userId } }),
     ]);
 
-    return {
+    const result = {
       items: items.map(s => {
         let duration = 0;
         if (s.completedAt && s.startedAt) {
@@ -112,9 +125,16 @@ export class DashboardService {
       page,
       totalPages: Math.ceil(total / limit),
     };
+
+    await cacheService.set(cacheKey, result, config.REDIS_TTL_HISTORY, userId);
+    return result;
   }
 
   public async getPerformanceByTopic(userId: string) {
+    const cacheKey = `odyssey:performance:${userId}`;
+    const cachedData = await cacheService.get<any>(cacheKey);
+    if (cachedData) return cachedData;
+
     const sessions = await prisma.assessmentSession.findMany({
       where: { userId, status: 'COMPLETED', score: { not: null } },
       select: { score: true, topic: { select: { name: true } } },
@@ -135,7 +155,10 @@ export class DashboardService {
       assessmentsCount: topicStats[name].count,
     }));
 
-    return { topics };
+    const result = { topics };
+
+    await cacheService.set(cacheKey, result, config.REDIS_TTL_PERFORMANCE, userId);
+    return result;
   }
 }
 

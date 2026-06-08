@@ -1,7 +1,8 @@
 import { Difficulty, SessionStatus } from '@prisma/client';
 
 export interface CreateSessionRequest {
-  topicId: string;
+  topicId?: string; // Deprecated
+  topicIds?: string[];
   difficulty: Difficulty;
 }
 

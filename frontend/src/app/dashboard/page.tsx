@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
 import { useAuthStore } from '@/store/auth.store';
@@ -23,16 +23,22 @@ export default function DashboardPage() {
 
   const [selectedTopic, setSelectedTopic] = useState<{ id: string; name: string } | null>(null);
   const [isNewSessionModalOpen, setIsNewSessionModalOpen] = useState(false);
-  const [newSessionTopicId, setNewSessionTopicId] = useState<string>('');
+  const [newSessionTopicIds, setNewSessionTopicIds] = useState<string[]>([]);
   const [customTopicName, setCustomTopicName] = useState<string>('');
   const [newSessionDifficulty, setNewSessionDifficulty] = useState<'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'>('INTERMEDIATE');
 
   const { data: topics, isLoading: isTopicsLoading } = useTopics();
   const { mutate: createSession, isPending: isCreating } = useCreateSession();
 
-  const { data: overview, isLoading: isOverviewLoading } = useDashboardOverview();
-  const { data: historyData, isLoading: isHistoryLoading } = useDashboardHistory();
-  const { data: performanceData, isLoading: isPerformanceLoading } = useDashboardPerformance();
+  const { data: overview, isLoading: isOverviewLoading, refetch: refetchOverview } = useDashboardOverview();
+  const { data: historyData, isLoading: isHistoryLoading, refetch: refetchHistory } = useDashboardHistory();
+  const { data: performanceData, isLoading: isPerformanceLoading, refetch: refetchPerformance } = useDashboardPerformance();
+
+  useEffect(() => {
+    refetchOverview();
+    refetchHistory();
+    refetchPerformance();
+  }, [refetchOverview, refetchHistory, refetchPerformance]);
 
   if (isAuthLoading || !user) {
     return (
@@ -45,7 +51,7 @@ export default function DashboardPage() {
 
   const handleStartSession = (difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED') => {
     if (!selectedTopic) return;
-    createSession({ topicId: selectedTopic.id, difficulty }, {
+    createSession({ topicIds: [selectedTopic.id], difficulty }, {
       onSuccess: (data) => {
         toast.success('Session created successfully!');
         router.push(`/interview/${data.sessionId}?q=1`);
@@ -57,12 +63,22 @@ export default function DashboardPage() {
   };
 
   const handleStartNewSession = () => {
-    const finalTopicId = newSessionTopicId === 'custom' ? customTopicName.trim() : newSessionTopicId;
-    if (!finalTopicId) {
-      toast.error('Please select or enter a topic');
+    let finalTopicIds = [...newSessionTopicIds];
+    if (customTopicName.trim()) {
+      if (!finalTopicIds.includes(customTopicName.trim())) {
+        finalTopicIds.push(customTopicName.trim());
+      }
+    }
+    if (finalTopicIds.length === 0) {
+      toast.error('Please select or enter at least one topic');
       return;
     }
-    createSession({ topicId: finalTopicId, difficulty: newSessionDifficulty }, {
+    if (finalTopicIds.length > 5) {
+      toast.error('Maximum 5 topics allowed');
+      return;
+    }
+
+    createSession({ topicIds: finalTopicIds, difficulty: newSessionDifficulty }, {
       onSuccess: (data) => {
         toast.success('Session created successfully!');
         setIsNewSessionModalOpen(false);
@@ -377,27 +393,41 @@ export default function DashboardPage() {
       >
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-900 dark:text-white">Select Topic</label>
-            <select 
-              value={newSessionTopicId}
-              onChange={(e) => setNewSessionTopicId(e.target.value)}
-              className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
-            >
-              <option value="" disabled>Choose a topic...</option>
+            <label className="text-sm font-semibold text-gray-900 dark:text-white">Select Topics (Max 5)</label>
+            <div className="flex flex-wrap gap-2">
               {topics?.map(topic => (
-                <option key={topic.id} value={topic.id}>{topic.name}</option>
+                <button
+                  key={topic.id}
+                  onClick={() => {
+                    if (newSessionTopicIds.includes(topic.id)) {
+                      setNewSessionTopicIds(prev => prev.filter(id => id !== topic.id));
+                    } else {
+                      if (newSessionTopicIds.length >= 5) {
+                        toast.error('Maximum 5 topics allowed');
+                        return;
+                      }
+                      setNewSessionTopicIds(prev => [...prev, topic.id]);
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                    newSessionTopicIds.includes(topic.id)
+                      ? 'bg-indigo-100 border-indigo-500 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-500'
+                      : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-900 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  {topic.name}
+                </button>
               ))}
-              <option value="custom">+ Custom Topic</option>
-            </select>
-            {newSessionTopicId === 'custom' && (
-              <input
-                type="text"
-                placeholder="E.g. System Design, Kubernetes, etc."
-                value={customTopicName}
-                onChange={(e) => setCustomTopicName(e.target.value)}
-                className="w-full mt-3 p-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
-              />
-            )}
+            </div>
+            
+            <label className="text-sm font-semibold text-gray-900 dark:text-white mt-4 block">Add Custom Topic</label>
+            <input
+              type="text"
+              placeholder="E.g. System Design, Kubernetes, etc."
+              value={customTopicName}
+              onChange={(e) => setCustomTopicName(e.target.value)}
+              className="w-full mt-1 p-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+            />
           </div>
 
           <div className="space-y-2">
@@ -421,7 +451,7 @@ export default function DashboardPage() {
 
           <button
             onClick={handleStartNewSession}
-            disabled={isCreating || !newSessionTopicId}
+            disabled={isCreating || (newSessionTopicIds.length === 0 && !customTopicName.trim())}
             className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl transition-colors flex justify-center items-center gap-2"
           >
             {isCreating ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <PlayCircle className="w-5 h-5" />}

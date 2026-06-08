@@ -1,5 +1,7 @@
 import { prisma } from '../../lib/prisma';
 import { Prisma } from '@prisma/client';
+import { cacheService } from '../../services/cache.service';
+import { config } from '../../config';
 
 export class HistoryService {
   public async getHistory(
@@ -15,6 +17,17 @@ export class HistoryService {
       endDate?: string;
     } = {}
   ) {
+    const topicIdVal = filters.topicId || 'all';
+    const diffVal = filters.difficulty || 'all';
+    const statusVal = filters.status || 'all';
+    const perfVal = filters.performanceLevel || 'all';
+    const startVal = filters.startDate || 'all';
+    const endVal = filters.endDate || 'all';
+    const cacheKey = `odyssey:history:${userId}:${page}:${limit}:${topicIdVal}:${diffVal}:${statusVal}:${perfVal}:${startVal}:${endVal}`;
+    
+    const cachedData = await cacheService.get<any>(cacheKey);
+    if (cachedData) return cachedData;
+
     const skip = (page - 1) * limit;
 
     const where: Prisma.AssessmentSessionWhereInput = { userId };
@@ -62,6 +75,7 @@ export class HistoryService {
         select: {
           id: true,
           topic: { select: { name: true } },
+          sessionTopics: { select: { topicNameSnapshot: true } },
           difficulty: true,
           score: true,
           status: true,
@@ -74,8 +88,8 @@ export class HistoryService {
       prisma.assessmentSession.count({ where }),
     ]);
 
-    return {
-      items: items.map(s => {
+    const result = {
+      items: items.map((s: any) => {
         let duration = 0;
         if (s.completedAt && s.startedAt) {
           duration = Math.round((s.completedAt.getTime() - s.startedAt.getTime()) / 60000);
@@ -92,9 +106,21 @@ export class HistoryService {
           performanceLevel = 'Failed';
         }
 
+        let topicDisplay = s.topic?.name || 'Unknown';
+        if (s.sessionTopics && s.sessionTopics.length > 0) {
+          const names = s.sessionTopics.map((t: any) => t.topicNameSnapshot);
+          if (names.length === 1) {
+            topicDisplay = names[0];
+          } else if (names.length <= 3) {
+            topicDisplay = names.join(' + ');
+          } else {
+            topicDisplay = `${names[0]}, ${names[1]} +${names.length - 2}`;
+          }
+        }
+
         return {
           sessionId: s.id,
-          topic: s.topic.name,
+          topic: topicDisplay,
           difficulty: s.difficulty,
           score: s.score,
           status: s.status,
@@ -110,6 +136,9 @@ export class HistoryService {
       limit,
       totalPages: Math.ceil(total / limit),
     };
+
+    await cacheService.set(cacheKey, result, config.REDIS_TTL_HISTORY, userId);
+    return result;
   }
 }
 

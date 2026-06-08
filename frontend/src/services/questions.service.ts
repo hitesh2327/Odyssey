@@ -5,6 +5,8 @@ export interface QuestionData {
   questionOrder: number;
   questionText: string;
   existingAnswer: string | null;
+  topic?: string;
+  difficulty?: string;
 }
 
 export interface AIAssistanceData {

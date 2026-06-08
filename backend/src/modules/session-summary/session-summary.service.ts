@@ -2,6 +2,7 @@ import { prisma } from '../../lib/prisma';
 import { ApiError } from '../../utils/ApiError';
 import { SessionSummaryResponse } from './session-summary.types';
 import { evaluationService } from '../evaluation/evaluation.service';
+import { cacheService } from '../../services/cache.service';
 import { logger } from '../../lib/logger';
 
 export class SessionSummaryService {
@@ -49,6 +50,9 @@ export class SessionSummaryService {
       });
     });
 
+    // Invalidate Redis cache since session status has changed
+    await cacheService.invalidateUserCache(userId);
+
     // 6. Trigger Background AI Evaluation
     evaluationService.evaluateSessionBackground(sessionId).catch((err) => {
       logger.error(`Background evaluation failed to start for session ${sessionId}:`, err);
@@ -81,6 +85,7 @@ export class SessionSummaryService {
       where: { id: sessionId },
       include: {
         topic: true,
+        sessionTopics: true,
         questions: {
           orderBy: { questionOrder: 'asc' },
           include: {
@@ -135,6 +140,13 @@ export class SessionSummaryService {
       performanceLevel = 'Failed';
     }
 
+    const topicsCovered = session.sessionTopics && session.sessionTopics.length > 0
+      ? session.sessionTopics.map(st => {
+          const qCount = session.questions.filter(q => q.topicId === st.topicId).length;
+          return `${st.topicNameSnapshot}: ${qCount} Questions`;
+        })
+      : [`${session.topic?.name || 'Unknown Topic'}: ${totalQuestions} Questions`];
+
     // 5. Map Questions Summary
     const questionsSummary = session.questions.map((q) => {
       // Find the user answer for this session/question
@@ -176,6 +188,7 @@ export class SessionSummaryService {
         completionPercentage,
         durationInMinutes,
       },
+      topicsCovered,
       questions: questionsSummary,
     };
   }

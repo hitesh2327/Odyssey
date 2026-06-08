@@ -31,5 +31,6 @@ export interface SessionSummaryResponse {
     completionPercentage: number;
     durationInMinutes: number | null;
   };
+  topicsCovered?: string[];
   questions: QuestionSummary[];
 }

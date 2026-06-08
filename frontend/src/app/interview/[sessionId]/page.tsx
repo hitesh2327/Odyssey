@@ -42,11 +42,15 @@ export default function InterviewPage({ params }: { params: Promise<{ sessionId:
   // Parse order, default to 1
   const order = parseInt(qParam || '1', 10);
   
-  if (isNaN(order) || order < 1 || order > 5) {
-    router.replace(`/interview/${sessionId}?q=1`);
-  }
-
   const { data: progress, isLoading: isProgressLoading, isError: isProgressError } = useSessionProgress(sessionId);
+
+  useEffect(() => {
+    if (isNaN(order) || order < 1) {
+      router.replace(`/interview/${sessionId}?q=1`);
+    } else if (progress && order > progress.total) {
+      router.replace(`/interview/${sessionId}?q=1`);
+    }
+  }, [order, progress, router, sessionId]);
   const { data: question, isLoading: isQuestionLoading } = useQuestion(sessionId, order);
   const { mutateAsync: saveAnswer, isPending: isSaving } = useSaveAnswer();
   const { mutateAsync: completeSession, isPending: isCompleting } = useCompleteSession();
@@ -216,7 +220,7 @@ export default function InterviewPage({ params }: { params: Promise<{ sessionId:
               <>
                 <div className="flex items-center gap-3 mb-4">
                   <Badge variant="secondary" className="bg-zinc-100 text-zinc-700 hover:bg-zinc-200 shadow-none dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 border-none">
-                    {progress?.topic?.name || 'Topic'}
+                    {question?.topic || 'Topic'}
                   </Badge>
                   <Badge className={getDifficultyBadgeStyles(question?.difficulty)}>
                     {question?.difficulty || 'Standard'}

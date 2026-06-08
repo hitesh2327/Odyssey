@@ -16,6 +16,11 @@ const envSchema = z.object({
   GROQ_API_KEY: z.string().optional(),
   GROQ_MODEL: z.string().default('llama-3.3-70b-versatile'),
   GOOGLE_CLIENT_ID: z.string().optional(),
+  REDIS_HOST: z.string().default('localhost'),
+  REDIS_PORT: z.string().transform((val) => parseInt(val, 10)).default('6379'),
+  REDIS_TTL_DASHBOARD: z.string().transform((val) => parseInt(val, 10)).default('300'),
+  REDIS_TTL_HISTORY: z.string().transform((val) => parseInt(val, 10)).default('600'),
+  REDIS_TTL_PERFORMANCE: z.string().transform((val) => parseInt(val, 10)).default('900'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 });
 

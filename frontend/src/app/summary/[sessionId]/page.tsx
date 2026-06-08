@@ -8,14 +8,14 @@ import { useEvaluationStatus } from '@/hooks/use-evaluation';
 import { Navbar } from '@/components/layout/navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Clock, Sparkles, BrainCircuit, ChevronRight, Activity, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Clock, Sparkles, BrainCircuit, ChevronRight, Activity, ChevronDown, ChevronUp, AlertCircle, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SummaryPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = use(params);
   const router = useRouter();
   const queryClient = useQueryClient();
-  
+
   const { data: summary, isLoading: isSummaryLoading, isFetching: isSummaryFetching, isError } = useSessionSummary(sessionId);
 
   // Poll evaluation status if it's pending or processing
@@ -106,11 +106,11 @@ export default function SummaryPage({ params }: { params: Promise<{ sessionId: s
     }
   };
 
-  const getScoreTheme = (score: number | null) => {
+  const getScoreTheme = (score: number | null | undefined) => {
     if (score === null) return scoreClasses.orange;
-    if (score >= 90) return scoreClasses.emerald;
-    if (score >= 70) return scoreClasses.blue;
-    if (score >= 50) return scoreClasses.amber;
+    if (score != null && score >= 90) return scoreClasses.emerald;
+    if (score != null && score >= 70) return scoreClasses.blue;
+    if (score != null && score >= 50) return scoreClasses.amber;
     return scoreClasses.orange;
   };
 
@@ -122,7 +122,7 @@ export default function SummaryPage({ params }: { params: Promise<{ sessionId: s
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-12">
       <Navbar />
-      
+
       <main className="container mx-auto max-w-5xl px-4 py-8 space-y-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -157,7 +157,7 @@ export default function SummaryPage({ params }: { params: Promise<{ sessionId: s
               {performanceLevel}
             </div>
           </div>
-          
+
           <div className="flex-1 space-y-4 text-center md:text-left w-full">
             <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">Overall Feedback</h2>
             <div className="bg-violet-50 dark:bg-violet-900/10 border border-violet-200 dark:border-violet-800/30 p-6 rounded-2xl">
@@ -210,6 +210,22 @@ export default function SummaryPage({ params }: { params: Promise<{ sessionId: s
           </div>
         )}
 
+        {/* Topics Covered */}
+        {summary.topicsCovered && summary.topicsCovered.length > 0 && (
+          <div className="bg-white dark:bg-zinc-950 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-4 flex items-center gap-2">
+              <BookOpen className="w-4 h-4" /> Topics Covered
+            </h3>
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {summary.topicsCovered.map((t, i) => (
+                <li key={i} className="flex gap-2 text-zinc-700 dark:text-zinc-300 text-sm font-medium items-center bg-zinc-50 dark:bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-100 dark:border-zinc-800">
+                  <span className="text-indigo-500 shrink-0">✓</span> {t}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Detailed Review */}
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Question Review</h2>
@@ -219,7 +235,7 @@ export default function SummaryPage({ params }: { params: Promise<{ sessionId: s
               const qTheme = getScoreTheme(q.score);
               return (
                 <Card key={q.questionId} className="overflow-hidden transition-all duration-300 hover:border-indigo-200 dark:hover:border-indigo-800">
-                  <div 
+                  <div
                     onClick={() => toggleQ(q.questionId)}
                     className="cursor-pointer border-b border-transparent hover:bg-zinc-50/50 px-6 py-5 dark:hover:bg-zinc-900/30 flex justify-between items-center transition-colors group"
                   >
@@ -247,7 +263,7 @@ export default function SummaryPage({ params }: { params: Promise<{ sessionId: s
                       {isExpanded ? <ChevronUp className="w-6 h-6" /> : <ChevronDown className="w-6 h-6" />}
                     </div>
                   </div>
-                  
+
                   {isExpanded && (
                     <CardContent className="p-0 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-900/10">
                       <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-zinc-200 dark:divide-zinc-800">
@@ -263,7 +279,7 @@ export default function SummaryPage({ params }: { params: Promise<{ sessionId: s
 
                         {/* AI Evaluation */}
                         <div className="p-6 space-y-6">
-                          
+
                           {/* Breakdown Scores */}
                           {q.breakdown && Object.keys(q.breakdown).length > 0 && (
                             <div className="space-y-3">
@@ -272,7 +288,7 @@ export default function SummaryPage({ params }: { params: Promise<{ sessionId: s
                                 {Object.entries(q.breakdown).map(([key, value]) => {
                                   const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
                                   const score = Number(value);
-                                  
+
                                   // Map semantic color
                                   let colorClass = "text-indigo-600 dark:text-indigo-400";
                                   if (key.toLowerCase().includes('problem')) colorClass = "text-emerald-600 dark:text-emerald-400";
@@ -329,15 +345,14 @@ export default function SummaryPage({ params }: { params: Promise<{ sessionId: s
                                 {q.expectedConcepts.map((concept, i) => {
                                   const isCovered = q.answer && q.answer.toLowerCase().includes(concept.toLowerCase());
                                   const isAISuggested = !isCovered && q.usedAI;
-                                  
+
                                   return (
-                                    <span key={i} className={`px-2.5 py-1 flex items-center gap-1.5 border text-xs font-medium rounded-md transition-colors ${
-                                      isCovered 
-                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800' 
+                                    <span key={i} className={`px-2.5 py-1 flex items-center gap-1.5 border text-xs font-medium rounded-md transition-colors ${isCovered
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
                                         : isAISuggested
-                                        ? 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-900/20 dark:text-violet-400 dark:border-violet-800'
-                                        : 'bg-zinc-50 text-zinc-500 border-zinc-200 dark:bg-zinc-900 dark:text-zinc-500 dark:border-zinc-800'
-                                    }`}>
+                                          ? 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-900/20 dark:text-violet-400 dark:border-violet-800'
+                                          : 'bg-zinc-50 text-zinc-500 border-zinc-200 dark:bg-zinc-900 dark:text-zinc-500 dark:border-zinc-800'
+                                      }`}>
                                       {isCovered ? <CheckCircle2 className="w-3 h-3" /> : isAISuggested ? <Sparkles className="w-3 h-3" /> : null}
                                       {concept}
                                     </span>

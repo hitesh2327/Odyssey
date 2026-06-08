@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/prisma';
 import { groq } from '../../lib/groq';
 import { config } from '../../config';
+import { cacheService } from '../../services/cache.service';
 import { logger } from '../../lib/logger';
 
 export class EvaluationService {
@@ -11,7 +12,7 @@ export class EvaluationService {
         include: {
           topic: true,
           questions: {
-            include: { answers: true },
+            include: { answers: true, topic: true },
           },
         },
       });
@@ -44,7 +45,7 @@ Return your evaluation as a valid JSON object matching this schema:
 }
 Do not include any extra text. Return only valid JSON.`;
 
-        const userPrompt = `Topic: ${session.topic.name}
+        const userPrompt = `Topic: ${q.topic.name}
 Difficulty: ${session.difficulty}
 Question: ${q.text}
 Candidate's Answer: ${answer.userResponse}`;
@@ -156,6 +157,9 @@ Provide ONLY the summary text, no extra markdown.`;
           evaluationStatus: 'COMPLETED',
         },
       });
+
+      // Invalidate Redis cache now that scores are available
+      await cacheService.invalidateUserCache(session.userId);
 
     } catch (error) {
       logger.error(`Critical failure in evaluateSessionBackground for session ${sessionId}:`, error);

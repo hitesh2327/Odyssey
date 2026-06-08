@@ -11,8 +11,9 @@ export class QuestionGeneratorService {
   public async generateQuestions(
     topicName: string,
     difficulty: string,
+    count: number = 5,
   ): Promise<{ questions: GeneratedQuestion[]; prompt: string }> {
-    const prompt = `Generate exactly 5 technical interview questions for the topic "${topicName}" at "${difficulty}" difficulty level.
+    const prompt = `Generate exactly ${count} technical interview questions for the topic "${topicName}" at "${difficulty}" difficulty level.
 Return your response as a JSON object matching this schema:
 {
   "questions": [
@@ -40,8 +41,8 @@ Do not include any extra text outside the JSON markdown format. Return only vali
               order: q.order || 1,
               text: q.question || q.text || '',
             }));
-            if (formatted.length === 5) {
-              logger.info(`Successfully generated 5 questions via Groq for ${topicName}`);
+            if (formatted.length === count) {
+              logger.info(`Successfully generated ${count} questions via Groq for ${topicName}`);
               return { questions: formatted, prompt };
             }
           }
@@ -54,7 +55,7 @@ Do not include any extra text outside the JSON markdown format. Return only vali
     }
 
     logger.info(`Using fallback static questions for ${topicName} (${difficulty})`);
-    const fallbackQuestions = this.getFallbackQuestions(topicName, difficulty);
+    const fallbackQuestions = this.getFallbackQuestions(topicName, difficulty).slice(0, count);
     return { questions: fallbackQuestions, prompt };
   }
 

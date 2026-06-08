@@ -1,7 +1,7 @@
 import { api } from './api';
 
 export interface CreateSessionParams {
-  topicId: string;
+  topicIds: string[];
   difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 }
 
@@ -38,6 +38,7 @@ export interface SessionSummary {
     completionPercentage: number;
     durationInMinutes: number;
   };
+  topicsCovered?: string[];
   questions: {
     questionId: string;
     questionOrder: number;

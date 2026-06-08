@@ -5,8 +5,9 @@ export class SessionsController {
   public createSession = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.user!.id;
-      const { topicId, difficulty } = req.body;
-      const result = await sessionsService.createSession(userId, topicId, difficulty);
+      const { topicId, topicIds, difficulty } = req.body;
+      const ids = topicIds && topicIds.length > 0 ? topicIds : [topicId];
+      const result = await sessionsService.createSession(userId, ids, difficulty);
       res.status(201).json({
         success: true,
         data: result,

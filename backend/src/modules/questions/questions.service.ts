@@ -40,6 +40,7 @@ export class QuestionsService {
             sessionId,
           },
         },
+        topic: true,
       },
     });
 
@@ -54,6 +55,8 @@ export class QuestionsService {
       questionOrder: question.questionOrder,
       questionText: question.text,
       existingAnswer,
+      topic: question.topic?.name || 'General',
+      difficulty: question.difficulty,
     };
   }
 }

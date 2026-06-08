@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { prisma } from '../lib/prisma';
+import { redisService, redisMetrics } from '../lib/redis';
 import { authRouter } from '../modules/auth/auth.routes';
 import { topicsRouter } from '../modules/topics/topics.routes';
 import { sessionsRouter } from '../modules/sessions/sessions.routes';
@@ -12,11 +14,34 @@ import { dashboardRoutes } from '../modules/dashboard/dashboard.routes';
 
 const router = Router();
 
-// Health Check Endpoint
-router.get('/health', (_req, res) => {
+// Enhanced Health Check Endpoint
+router.get('/health', async (_req, res) => {
+  let dbStatus = 'UP';
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+  } catch (error) {
+    dbStatus = 'DOWN';
+  }
+
+  const client = redisService.getClient();
+  let redisStatus = 'UP';
+  try {
+    if (client) {
+      await client.ping();
+    } else {
+      redisStatus = 'DOWN';
+    }
+  } catch (error) {
+    redisStatus = 'DOWN';
+  }
+
   res.status(200).json({
-    success: true,
     status: 'UP',
+    database: dbStatus,
+    redis: redisStatus,
+    cacheHits: redisMetrics.cacheHits,
+    cacheMisses: redisMetrics.cacheMisses,
+    cacheErrors: redisMetrics.cacheErrors,
   });
 });
 
