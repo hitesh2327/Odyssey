@@ -14,20 +14,22 @@ export class SessionsService {
       throw new ApiError(400, 'Maximum 5 topics allowed');
     }
 
-    const topics = await Promise.all(uniqueInputTopicIds.map(async (t) => {
-      let topic = await prisma.topic.findFirst({
-        where: {
-          OR: [{ id: t }, { name: { equals: t, mode: 'insensitive' } }],
-        },
-      });
-      if (!topic) {
-        topic = await prisma.topic.create({ data: { name: t } });
-      }
-      return topic;
-    }));
+    const topics = await Promise.all(
+      uniqueInputTopicIds.map(async (t) => {
+        let topic = await prisma.topic.findFirst({
+          where: {
+            OR: [{ id: t }, { name: { equals: t, mode: 'insensitive' } }],
+          },
+        });
+        if (!topic) {
+          topic = await prisma.topic.create({ data: { name: t } });
+        }
+        return topic;
+      }),
+    );
 
     const uniqueTopicsMap = new Map();
-    topics.forEach(t => uniqueTopicsMap.set(t.id, t));
+    topics.forEach((t: { id: any }) => uniqueTopicsMap.set(t.id, t));
     const uniqueTopics = Array.from(uniqueTopicsMap.values());
 
     if (uniqueTopics.length > 5) {
@@ -38,26 +40,34 @@ export class SessionsService {
     const assessmentType = uniqueTopics.length === 1 ? 'SINGLE_TOPIC' : 'MULTI_TOPIC';
     const distribution = this.distributeQuestions(uniqueTopics.length, totalQuestions);
 
-    const allQuestions: { topicId: string; text: string; difficulty: Difficulty; questionOrder: number }[] = [];
+    const allQuestions: {
+      topicId: string;
+      text: string;
+      difficulty: Difficulty;
+      questionOrder: number;
+    }[] = [];
     let combinedPrompt = '';
     let questionOrder = 1;
 
     for (let i = 0; i < uniqueTopics.length; i++) {
       const topic = uniqueTopics[i];
       const numQuestions = distribution[i];
-      
+
       const { questions, prompt } = await questionGeneratorService.generateQuestions(
         topic.name,
         difficulty,
-        numQuestions
+        numQuestions,
       );
 
       combinedPrompt += `\nTopic: ${topic.name}\n${prompt}`;
-      
+
       if (questions.length !== numQuestions) {
-         throw new ApiError(500, `Failed to generate enough questions for topic ${topic.name}. Expected ${numQuestions}, got ${questions.length}.`);
+        throw new ApiError(
+          500,
+          `Failed to generate enough questions for topic ${topic.name}. Expected ${numQuestions}, got ${questions.length}.`,
+        );
       }
-      
+
       for (const q of questions.slice(0, numQuestions)) {
         allQuestions.push({
           topicId: topic.id,
@@ -80,7 +90,7 @@ export class SessionsService {
           currentQuestionOrder: 1,
           questionGenerationPrompt: combinedPrompt,
           sessionTopics: {
-            create: uniqueTopics.map(t => ({
+            create: uniqueTopics.map((t) => ({
               topicId: t.id,
               topicNameSnapshot: t.name,
             })),

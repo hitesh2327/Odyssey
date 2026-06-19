@@ -3,6 +3,7 @@ import { groq } from '../../lib/groq';
 import { config } from '../../config';
 import { cacheService } from '../../services/cache.service';
 import { logger } from '../../lib/logger';
+import { EvaluationPrompt } from '../../prompts/evaluation.prompt';
 
 export class EvaluationService {
   public async evaluateSessionBackground(sessionId: string): Promise<void> {
@@ -20,95 +21,93 @@ export class EvaluationService {
       if (!session) return;
 
       const questionsWithAnswers = session.questions.filter(
-        (q) => q.answers.length > 0
+        (q: { answers: string | any[] }) => q.answers.length > 0,
       );
 
       // 1. Evaluate answers concurrently using Promise.allSettled
-      const evaluationPromises = questionsWithAnswers.map(async (q) => {
-        const answer = q.answers[0];
+      const evaluationPromises = questionsWithAnswers.map(
+        async (q: { answers: any[]; topic: { name: any }; text: any }) => {
+          const answer = q.answers[0];
 
-        const systemPrompt = `You are an expert technical interviewer evaluating a candidate's answer.
-Return your evaluation as a valid JSON object matching this schema:
-{
-  "score": 85, // An integer between 0 and 100 representing the overall quality, accuracy, and completeness.
-  "breakdown": {
-    "technicalAccuracy": 18, // out of 20
-    "depthOfKnowledge": 16, // out of 20
-    "communicationClarity": 17, // out of 20
-    "problemSolving": 15, // out of 20
-    "bestPractices": 18 // out of 20
-  },
-  "strengths": ["Clear explanation", "Good use of examples"], // Array of strings
-  "improvements": ["Could mention edge cases"], // Array of strings
-  "feedback": "Your constructive overall feedback here...",
-  "expectedConcepts": ["concept1", "concept2"] // Array of core concepts that should ideally be mentioned.
-}
-Do not include any extra text. Return only valid JSON.`;
+          const systemPrompt = EvaluationPrompt.systemPrompt();
 
-        const userPrompt = `Topic: ${q.topic.name}
-Difficulty: ${session.difficulty}
-Question: ${q.text}
-Candidate's Answer: ${answer.userResponse}`;
+          const userPrompt = EvaluationPrompt.userPrompt({
+            topic: q.topic.name,
+            difficulty: session.difficulty,
+            question: q.text,
+            answer: answer.userResponse,
+          });
 
-        if (!config.GROQ_API_KEY || config.GROQ_API_KEY === 'dummy_key') {
-          throw new Error('Groq API Key is missing. Cannot evaluate.');
-        }
+          if (!config.GROQ_API_KEY || config.GROQ_API_KEY === 'dummy_key') {
+            throw new Error('Groq API Key is missing. Cannot evaluate.');
+          }
 
-        const response = await groq.chat.completions.create({
-          model: config.GROQ_MODEL || 'llama-3.3-70b-versatile',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          response_format: { type: 'json_object' },
-        });
+          const response = await groq.chat.completions.create({
+            model: config.GROQ_MODEL || 'llama-3.3-70b-versatile',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+            response_format: { type: 'json_object' },
+          });
 
-        const content = response.choices[0]?.message?.content;
-        if (!content) throw new Error('Empty response from Groq');
+          const content = response.choices[0]?.message?.content;
+          if (!content) throw new Error('Empty response from Groq');
 
-        const parsed = JSON.parse(content);
-        
-        // Ensure values are correct
-        const score = typeof parsed.score === 'number' ? parsed.score : parseInt(parsed.score) || 0;
-        const feedback = parsed.feedback || 'No feedback provided.';
-        const expectedConcepts = Array.isArray(parsed.expectedConcepts) ? parsed.expectedConcepts : [];
-        const strengths = Array.isArray(parsed.strengths) ? parsed.strengths : [];
-        const improvements = Array.isArray(parsed.improvements) ? parsed.improvements : [];
-        const breakdown = typeof parsed.breakdown === 'object' && parsed.breakdown !== null ? parsed.breakdown : {
-          technicalAccuracy: 0,
-          depthOfKnowledge: 0,
-          communicationClarity: 0,
-          problemSolving: 0,
-          bestPractices: 0
-        };
+          const parsed = JSON.parse(content);
 
-        try {
-        // Save individual answer evaluation
-        
-        await prisma.answer.update({
-          where: { id: answer.id },
-          data: {
-            score,
-            feedback,
-            expectedConcepts,
-            strengths,
-            improvements,
-            breakdown,
-          },
-        });  
-        } catch (error) {
-          logger.error("Error saving individual answer evaluation: ", error);
-          
-        }
+          // Ensure values are correct
+          const score =
+            typeof parsed.score === 'number' ? parsed.score : parseInt(parsed.score) || 0;
+          const feedback = parsed.feedback || 'No feedback provided.';
+          const expectedConcepts = Array.isArray(parsed.expectedConcepts)
+            ? parsed.expectedConcepts
+            : [];
+          const strengths = Array.isArray(parsed.strengths) ? parsed.strengths : [];
+          const improvements = Array.isArray(parsed.improvements) ? parsed.improvements : [];
+          const breakdown =
+            typeof parsed.breakdown === 'object' && parsed.breakdown !== null
+              ? parsed.breakdown
+              : {
+                  technicalAccuracy: 0,
+                  depthOfKnowledge: 0,
+                  communicationClarity: 0,
+                  problemSolving: 0,
+                  bestPractices: 0,
+                };
 
-        return { score, feedback };
-      });
+          try {
+            // Save individual answer evaluation
+
+            await prisma.answer.update({
+              where: { id: answer.id },
+              data: {
+                score,
+                feedback,
+                expectedConcepts,
+                strengths,
+                improvements,
+                breakdown,
+              },
+            });
+          } catch (error) {
+            logger.error('Error saving individual answer evaluation: ', error);
+          }
+
+          return { score, feedback };
+        },
+      );
 
       const results = await Promise.allSettled(evaluationPromises);
 
       const successfulEvaluations = results
-        .filter((r): r is PromiseFulfilledResult<{ score: number; feedback: string }> => r.status === 'fulfilled')
-        .map((r) => r.value);
+        .filter(
+          (r: {
+            status: string;
+          }): r is PromiseFulfilledResult<{ score: number; feedback: string }> =>
+            r.status === 'fulfilled',
+        )
+        .map((r: { value: any }) => r.value);
 
       if (successfulEvaluations.length === 0) {
         // All evaluations failed
@@ -120,7 +119,10 @@ Candidate's Answer: ${answer.userResponse}`;
       }
 
       // Calculate overall score
-      const totalScore = successfulEvaluations.reduce((sum, current) => sum + current.score, 0);
+      const totalScore = successfulEvaluations.reduce(
+        (sum: any, current: { score: any }) => sum + current.score,
+        0,
+      );
       const overallScore = Math.round(totalScore / successfulEvaluations.length);
 
       // Generate overall feedback
@@ -129,15 +131,13 @@ Candidate's Answer: ${answer.userResponse}`;
         const summaryPrompt = `You are a senior tech lead. Based on the candidate's performance across ${successfulEvaluations.length} questions, write a short, 2-3 sentence overall performance summary.
 The average score is ${overallScore}/100.
 Here are the individual feedbacks for context:
-${successfulEvaluations.map((e, i) => `Q${i + 1}: ${e.feedback}`).join('\n')}
+${successfulEvaluations.map((e: { feedback: any }, i: number) => `Q${i + 1}: ${e.feedback}`).join('\n')}
 
 Provide ONLY the summary text, no extra markdown.`;
 
         const summaryResponse = await groq.chat.completions.create({
           model: config.GROQ_MODEL || 'llama-3.3-70b-versatile',
-          messages: [
-            { role: 'user', content: summaryPrompt },
-          ],
+          messages: [{ role: 'user', content: summaryPrompt }],
         });
 
         if (summaryResponse.choices[0]?.message?.content) {
@@ -160,13 +160,17 @@ Provide ONLY the summary text, no extra markdown.`;
 
       // Invalidate Redis cache now that scores are available
       await cacheService.invalidateUserCache(session.userId);
-
     } catch (error) {
-      logger.error(`Critical failure in evaluateSessionBackground for session ${sessionId}:`, error);
-      await prisma.assessmentSession.update({
-        where: { id: sessionId },
-        data: { evaluationStatus: 'FAILED' },
-      }).catch(() => {});
+      logger.error(
+        `Critical failure in evaluateSessionBackground for session ${sessionId}:`,
+        error,
+      );
+      await prisma.assessmentSession
+        .update({
+          where: { id: sessionId },
+          data: { evaluationStatus: 'FAILED' },
+        })
+        .catch(() => {});
     }
   }
 }

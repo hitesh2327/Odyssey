@@ -6,12 +6,7 @@ import { getAssistSchema } from './ai-assistance.validation';
 
 const router = Router();
 
-router.post(
-  '/:questionId/assist',
-  authMiddleware,
-  validate(getAssistSchema),
-  aiAssistanceController.requestAssistance,
-);
+
 
 router.get(
   '/:questionId/assist/stream',

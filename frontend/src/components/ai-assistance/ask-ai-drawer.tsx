@@ -33,7 +33,7 @@ export function AskAIDrawer({ isOpen, onClose, questionId }: AskAIDrawerProps) {
     }
 
     // Connect to SSE endpoint
-    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1'}/questions/${questionId}/assist/stream`;
+    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/questions/${questionId}/assist/stream`;
     
     // Create EventSource with credentials for cookies
     const es = new EventSource(url, { withCredentials: true });
