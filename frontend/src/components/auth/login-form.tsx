@@ -52,9 +52,24 @@ export function LoginForm() {
 
   return (
     <div className="flex flex-col gap-6 w-full">
+      {/* Branding */}
+      <div className="flex flex-col items-center md:items-start gap-4 mb-2">
+        <div className="flex items-center gap-3">
+          <div className="h-16 w-16 flex-shrink-0">
+            <img src="/logo.png" alt="Odyssey Logo" className="h-full w-full object-contain drop-shadow-md" />
+          </div>
+          <h1 className="text-5xl font-extrabold tracking-tight pb-2 bg-gradient-to-r from-slate-700 to-slate-900 dark:from-slate-200 dark:to-slate-400 bg-clip-text text-transparent lowercase">
+            odyssey
+          </h1>
+        </div>
+        <p className="text-xs font-bold tracking-[0.15em] text-amber-600/90 dark:text-amber-500/90 uppercase text-center md:text-left">
+          Your journey to the ideal job starts here
+        </p>
+      </div>
+
       {/* Title */}
-      <div className="flex flex-col gap-1.5 text-center md:text-left">
-        <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+      <div className="flex flex-col gap-1.5 text-center md:text-left mt-2">
+        <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200">
           Welcome back
         </h3>
         <p className="text-sm text-slate-500 dark:text-slate-400">

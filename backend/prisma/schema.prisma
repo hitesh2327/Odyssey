@@ -119,7 +119,6 @@ model Question {
   topic         Topic             @relation(fields: [topicId], references: [id], onDelete: Cascade)
   answers       Answer[]
   aiAssistance  AIAssistance[]
-  aiInteractions AIInteraction[]
 
   @@unique([sessionId, questionOrder])
   @@index([sessionId])
@@ -165,23 +164,23 @@ model AIAssistance {
   @@map("ai_assistance")
 }
 
+enum ChatRole {
+  SYSTEM
+  USER
+  ASSISTANT
+}
+
 model AIInteraction {
-  id               String            @id @default(uuid())
-  sessionId        String
-  questionId       String?
-  type             InteractionType
-  prompt           String
-  response         String
-  tokensUsed       Int?
-  promptTokens     Int?
-  completionTokens Int?
-  modelName        String?           @db.VarChar(100)
-  promptVersion    String?
-  createdAt        DateTime          @default(now())
-  session          AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  question         Question?         @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  id         String            @id @default(uuid())
+  sessionId  String
+  role       ChatRole
+  content    String
+  tokensUsed Int?
+  createdAt  DateTime          @default(now())
+
+  session AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
-  @@index([questionId])
+  @@index([sessionId, createdAt])
   @@map("ai_interactions")
 }

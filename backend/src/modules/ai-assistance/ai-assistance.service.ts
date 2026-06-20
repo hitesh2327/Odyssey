@@ -5,9 +5,9 @@ import { config } from '../../config';
 import { logger } from '../../lib/logger';
 import { AIAssistanceResponseData } from './ai-assistance.types';
 import { StreamAssistance } from '../../prompts/stream.assistance.prompt';
+import { chatMemoryService } from '../../services/chat-memory.service';
 
 export class AIAssistanceService {
-
   public async streamAssistance(userId: string, questionId: string, res: any) {
     // 1. Validations
     const question = await prisma.question.findUnique({
@@ -57,12 +57,22 @@ export class AIAssistanceService {
     });
 
     try {
+      const history = await chatMemoryService.getMessages(session.id);
+
+      const messages = [
+        {
+          role: 'system' as const,
+          content: systemPrompt,
+        },
+        ...history,
+        {
+          role: 'user' as const,
+          content: userPrompt,
+        },
+      ];
       const stream = await groq.chat.completions.create({
         model: config.GROQ_MODEL || 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
+        messages,
         stream: true,
       });
 
@@ -97,16 +107,25 @@ export class AIAssistanceService {
           },
         });
 
-        await tx.aIInteraction.create({
-          data: {
-            sessionId: session.id,
-            questionId,
-            type: 'HINT_REQUEST',
-            prompt: userPrompt,
-            response: fullContent,
-            modelName: config.GROQ_MODEL || 'llama-3.3-70b-versatile',
-            promptVersion: 'AI_STREAM_V1',
-          },
+        // await tx.aIInteraction.create({
+        //   data: {
+        //     sessionId: session.id,
+        //     questionId,
+        //     type: 'HINT_REQUEST',
+        //     prompt: userPrompt,
+        //     response: fullContent,
+        //     modelName: config.GROQ_MODEL || 'llama-3.3-70b-versatile',
+        //     promptVersion: 'AI_STREAM_V1',
+        //   },
+        // });
+        await chatMemoryService.addMessage(session.id, {
+          role: 'user',
+          content: userPrompt,
+        });
+
+        await chatMemoryService.addMessage(session.id, {
+          role: 'assistant',
+          content: fullContent,
         });
       });
 

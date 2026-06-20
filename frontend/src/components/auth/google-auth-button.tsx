@@ -38,6 +38,7 @@ export function GoogleAuthButton() {
     };
 
     const initializeGoogle = () => {
+      
       if (!window.google) return;
 
       const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'your-google-client-id.apps.googleusercontent.com';

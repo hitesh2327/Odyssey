@@ -19,8 +19,16 @@ api.interceptors.response.use(
     const message = error.response?.data?.message || 'Something went wrong';
 
     if (status === 401) {
-      toast.error('Session expired. Please log in again.');
-      // Optional: Redirect to login or clear auth state via an event
+      toast.error('Session expired. Please log in again.', { id: 'session-expired' });
+      
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('is_logged_in');
+        
+        // Prevent redirect loop if already on login or register pages
+        if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
+          window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+        }
+      }
     } else if (status === 403) {
       toast.error('Access denied.');
     } else if (status === 404) {
