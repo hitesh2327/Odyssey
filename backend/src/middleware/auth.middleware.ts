@@ -40,6 +40,7 @@ export const authMiddleware = async (
         id: true,
         name: true,
         email: true,
+        isEmailVerified: true,
       },
     });
 

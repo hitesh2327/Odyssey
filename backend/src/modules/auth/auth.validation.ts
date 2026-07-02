@@ -35,3 +35,62 @@ export const googleAuthSchema = z.object({
       .min(1, 'idToken cannot be empty'),
   }),
 });
+
+export const verifyEmailSchema = z.object({
+  body: z.object({
+    userId: z.string({ required_error: 'userId is required' }).uuid('Invalid User ID'),
+    otp: z.string({ required_error: 'otp is required' }).length(6, 'OTP must be exactly 6 digits'),
+  }),
+});
+
+export const resendOtpSchema = z.object({
+  body: z.object({
+    userId: z.string({ required_error: 'userId is required' }).uuid('Invalid User ID'),
+  }),
+});
+
+export const changeEmailRequestSchema = z.object({
+  body: z.object({
+    newEmail: z
+      .string({ required_error: 'New email is required' })
+      .trim()
+      .email('Invalid email format'),
+  }),
+});
+
+export const changeEmailVerifySchema = z.object({
+  body: z.object({
+    otp: z.string({ required_error: 'otp is required' }).length(6, 'OTP must be exactly 6 digits'),
+  }),
+});
+
+export const forgotPasswordSchema = z.object({
+  body: z.object({
+    email: z
+      .string({ required_error: 'Email is required' })
+      .trim()
+      .email('Invalid email format'),
+  }),
+});
+
+export const resetPasswordVerifySchema = z.object({
+  body: z.object({
+    email: z
+      .string({ required_error: 'Email is required' })
+      .trim()
+      .email('Invalid email format'),
+    otp: z.string({ required_error: 'otp is required' }).length(6, 'OTP must be exactly 6 digits'),
+    password: z
+      .string({ required_error: 'New password is required' })
+      .min(8, 'Password must be at least 8 characters long'),
+  }),
+});
+
+export const resetPasswordResendSchema = z.object({
+  body: z.object({
+    email: z
+      .string({ required_error: 'Email is required' })
+      .trim()
+      .email('Invalid email format'),
+  }),
+});

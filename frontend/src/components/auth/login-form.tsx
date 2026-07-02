@@ -8,8 +8,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/auth.store';
+import { authService } from '../../services/auth.service';
 import { GoogleAuthButton } from './google-auth-button';
-import { Mail, Lock, Loader2 } from 'lucide-react';
+import { OtpInput } from '../ui/otp-input';
+import { Mail, Lock, Loader2, ArrowLeft } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z
@@ -26,7 +28,15 @@ type LoginSchemaType = z.infer<typeof loginSchema>;
 export function LoginForm() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
+  const setUser = useAuthStore((state) => state.setUser);
+  
+  const [step, setStep] = useState<'login' | 'otp'>('login');
+  const [unverifiedUser, setUnverifiedUser] = useState<{ userId: string; email: string } | null>(null);
+  const [otp, setOtp] = useState('');
+  
   const [submitting, setSubmitting] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [resending, setResending] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   const {
@@ -45,10 +55,117 @@ export function LoginForm() {
       setIsRedirecting(true);
       router.push('/dashboard');
     } catch (err: any) {
+      if (err.message === 'EMAIL_NOT_VERIFIED' && err.payload) {
+        setUnverifiedUser({ userId: err.payload.userId, email: err.payload.email });
+        setStep('otp');
+        toast.error('Please verify your email address to continue.');
+        setSubmitting(false);
+        return;
+      }
       toast.error(err.message || 'Login failed. Please verify credentials.');
       setSubmitting(false);
     }
   };
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.length !== 6) {
+      toast.error('Please enter a 6-digit verification code.');
+      return;
+    }
+
+    setVerifying(true);
+    try {
+      const verifyRes = await authService.verifyEmail(unverifiedUser!.userId, otp);
+      if (verifyRes && verifyRes.user) {
+        setUser(verifyRes.user);
+        toast.success('Email verified successfully! Welcome back.');
+        setIsRedirecting(true);
+        router.push('/dashboard');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Verification failed. Please check the code.');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!unverifiedUser) return;
+    setResending(true);
+    try {
+      await authService.resendOtp(unverifiedUser.userId);
+      toast.success('Verification code resent successfully.');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to resend verification code.');
+    } finally {
+      setResending(false);
+    }
+  };
+
+  if (step === 'otp' && unverifiedUser) {
+    return (
+      <div className="flex flex-col gap-6 w-full">
+        {/* Back Button */}
+        <button
+          onClick={() => setStep('login')}
+          className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer self-start"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Back to login
+        </button>
+
+        {/* Title */}
+        <div className="flex flex-col gap-1.5 text-center md:text-left">
+          <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Verify your email
+          </h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Please enter the 6-digit verification code sent to <span className="font-semibold text-slate-700 dark:text-slate-300">{unverifiedUser.email}</span>.
+          </p>
+        </div>
+
+        {/* OTP Input Form */}
+        <form onSubmit={handleVerify} className="flex flex-col gap-6">
+          <OtpInput
+            value={otp}
+            onChange={setOtp}
+            disabled={verifying}
+          />
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={verifying || otp.length !== 6}
+            className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium rounded-xl text-sm flex justify-center items-center gap-2 shadow-lg shadow-indigo-600/10 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all cursor-pointer"
+          >
+            {verifying ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Verifying...
+              </>
+            ) : (
+              'Verify & Sign In'
+            )}
+          </button>
+        </form>
+
+        {/* Resend Code Link */}
+        <div className="text-center mt-2">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Didn't receive the code?{' '}
+            <button
+              onClick={handleResend}
+              disabled={resending}
+              className="text-indigo-600 hover:text-indigo-700 font-semibold hover:underline cursor-pointer disabled:opacity-50"
+            >
+              {resending ? 'Resending...' : 'Resend code'}
+            </button>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -106,6 +223,12 @@ export function LoginForm() {
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               Password
             </label>
+            <Link
+              href="/forgot-password"
+              className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold hover:underline"
+            >
+              Forgot password?
+            </Link>
           </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />

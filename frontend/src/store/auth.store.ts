@@ -17,7 +17,7 @@ interface AuthState {
   setUser: (user: User | null) => void;
   initializeAuth: () => Promise<void>;
   login: (credentials: any) => Promise<User>;
-  register: (data: any) => Promise<User>;
+  register: (data: any) => Promise<any>;
   logout: () => Promise<void>;
 }
 
@@ -85,11 +85,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true });
     try {
       const res = await authService.register(data);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('is_logged_in', 'true');
-      }
-      set({ user: res.user, isAuthenticated: true, isLoading: false });
-      return res.user;
+      set({ isLoading: false });
+      return res;
     } catch (error) {
       set({ isLoading: false });
       throw error;

@@ -6,13 +6,14 @@ import { prisma } from '../../lib/prisma';
 import { ApiError } from '../../utils/ApiError';
 import { registerSchema, loginSchema } from './auth.validation';
 import { z } from 'zod';
+import { sendOtp } from '../../lib/otp';
 
 type RegisterInput = z.infer<typeof registerSchema>['body'];
 type LoginInput = z.infer<typeof loginSchema>['body'];
 
 export class AuthService {
-  private generateToken(userId: string): string {
-    return jwt.sign({ userId }, config.JWT_SECRET, { expiresIn: '1d' });
+  public generateToken(userId: string, isEmailVerified: boolean): string {
+    return jwt.sign({ userId, isEmailVerified }, config.JWT_SECRET, { expiresIn: '1d' });
   }
 
   public async register(input: RegisterInput) {
@@ -37,17 +38,24 @@ export class AuthService {
         name: input.name,
         email: emailLower,
         passwordHash,
+        isEmailVerified: false,
       },
       select: {
         id: true,
         name: true,
         email: true,
+        isEmailVerified: true,
       },
     });
 
-    const token = this.generateToken(user.id);
+    // Send verify email OTP
+    await sendOtp('verify_email', user.id, user.email, undefined);
 
-    return { token, user };
+    return { 
+      userId: user.id, 
+      email: user.email, 
+      requiresVerification: true 
+    };
   }
 
   public async login(input: LoginInput) {
@@ -73,7 +81,15 @@ export class AuthService {
       throw new ApiError(401, 'Invalid email or password');
     }
 
-    const token = this.generateToken(user.id);
+    // Login guard: check email verification
+    if (!user.isEmailVerified) {
+      throw new ApiError(403, 'EMAIL_NOT_VERIFIED', {
+        userId: user.id,
+        email: user.email,
+      });
+    }
+
+    const token = this.generateToken(user.id, user.isEmailVerified);
 
     return {
       token,
@@ -81,6 +97,7 @@ export class AuthService {
         id: user.id,
         name: user.name,
         email: user.email,
+        isEmailVerified: user.isEmailVerified,
       },
     };
   }
@@ -146,7 +163,7 @@ export class AuthService {
       });
     }
 
-    const token = this.generateToken(user.id);
+    const token = this.generateToken(user.id, user.isEmailVerified);
 
     return {
       token,

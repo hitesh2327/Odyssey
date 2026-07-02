@@ -17,6 +17,7 @@ api.interceptors.response.use(
   (error) => {
     const status = error.response?.status;
     const message = error.response?.data?.message || 'Something went wrong';
+    const payload = error.response?.data?.payload;
 
     if (status === 401) {
       toast.error('Session expired. Please log in again.', { id: 'session-expired' });
@@ -30,7 +31,9 @@ api.interceptors.response.use(
         }
       }
     } else if (status === 403) {
-      toast.error('Access denied.');
+      if (message !== 'EMAIL_NOT_VERIFIED') {
+        toast.error('Access denied.');
+      }
     } else if (status === 404) {
       toast.error('Resource not found.');
     } else if (status >= 500) {
@@ -41,6 +44,10 @@ api.interceptors.response.use(
       toast.error('Too many requests. Please slow down.');
     }
 
-    return Promise.reject(new Error(message));
+    const customError = new Error(message) as any;
+    customError.status = status;
+    customError.payload = payload;
+
+    return Promise.reject(customError);
   }
 );

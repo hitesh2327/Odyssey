@@ -23,6 +23,12 @@ const envSchema = z.object({
   REDIS_TTL_PERFORMANCE: z.string().transform((val) => parseInt(val, 10)).default('900'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   UPLOAD_DIR: z.string().default('uploads'),
+  SMTP_HOST: z.string().default('smtp.gmail.com'),
+  SMTP_PORT: z.string().transform((val) => parseInt(val, 10)).default('587'),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM_NAME: z.string().default('Odyssey'),
+  FRONTEND_URL: z.string().url().default('http://localhost:3000'),
 });
 
 const result = envSchema.safeParse(process.env);
