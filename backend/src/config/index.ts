@@ -22,6 +22,7 @@ const envSchema = z.object({
   REDIS_TTL_HISTORY: z.string().transform((val) => parseInt(val, 10)).default('600'),
   REDIS_TTL_PERFORMANCE: z.string().transform((val) => parseInt(val, 10)).default('900'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  UPLOAD_DIR: z.string().default('uploads'),
 });
 
 const result = envSchema.safeParse(process.env);

@@ -31,6 +31,25 @@ enum AssessmentType {
   MULTI_TOPIC
 }
 
+// ---------- PROFILE ENUMS ----------
+
+enum ExperienceLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum ResumeFileType {
+  PDF
+  DOCX
+}
+
+enum PlanTier {
+  FREE
+  PRO
+}
+
 model User {
   id              String              @id @default(uuid())
   email           String              @unique
@@ -39,10 +58,16 @@ model User {
   provider        String              @default("local")
   googleId        String?
   avatarUrl       String?
+  avatarUploadedAt DateTime?
   isEmailVerified Boolean             @default(false)
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
   sessions        AssessmentSession[]
+
+  profile           Profile?
+  resumes           Resume[]
+  topicsOfInterest  TopicOfInterest[]
+  waypoints         UserWaypoint[]
 
   @@map("users")
 }
@@ -57,6 +82,8 @@ model Topic {
   sessions      AssessmentSession[]
   questions     Question[]
   sessionTopics SessionTopic[]
+
+  interestedUsers TopicOfInterest[]
 
   @@map("topics")
 }
@@ -183,4 +210,89 @@ model AIInteraction {
   @@index([sessionId])
   @@index([sessionId, createdAt])
   @@map("ai_interactions")
+}
+
+// ---------- PROFILE MODELS ----------
+
+model Profile {
+  id                   String          @id @default(uuid())
+  userId               String          @unique
+  role                 String?
+  homePort             String?
+  bio                  String?
+  experienceLevel      ExperienceLevel @default(INTERMEDIATE)
+  timezone             String?
+  streakDays           Int             @default(0)
+  lastActiveDate       DateTime?       @db.Date
+  planTier             PlanTier        @default(FREE)
+  aiUsesLimit          Int             @default(10)
+  currentPeriodStart   DateTime        @default(now())
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Resume {
+  id             String         @id @default(uuid())
+  userId         String
+  fileKey        String
+  fileName       String
+  fileType       ResumeFileType
+  fileSizeBytes  Int
+  isPrimary      Boolean        @default(false)
+  uploadedAt     DateTime       @default(now())
+  createdAt      DateTime       @default(now())
+  parsedData     Json?
+  parsedAt       DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // NOTE: Prisma can't express a partial unique index (WHERE is_primary = true)
+  // in schema syntax. This @@index is just for query performance —
+  // the actual "only one primary per user" constraint is added by hand
+  // to the generated migration.sql. See instructions below.
+  @@index([userId, isPrimary])
+  @@map("resumes")
+}
+
+model TopicOfInterest {
+  id        String   @id @default(uuid())
+  userId    String
+  topicId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topicId])
+  @@map("topics_of_interest")
+}
+
+model Waypoint {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  title       String
+  description String?
+  icon        String?
+  createdAt   DateTime @default(now())
+
+  unlockedBy UserWaypoint[]
+
+  @@map("waypoints")
+}
+
+model UserWaypoint {
+  id         String   @id @default(uuid())
+  userId     String
+  waypointId String
+  unlockedAt DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  waypoint Waypoint @relation(fields: [waypointId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, waypointId])
+  @@map("user_waypoints")
 }

@@ -11,6 +11,7 @@ import { sessionSummaryRouter } from '../modules/session-summary/session-summary
 import { historyRouter } from '../modules/history/history.routes';
 
 import { dashboardRoutes } from '../modules/dashboard/dashboard.routes';
+import { profileRouter } from '../modules/profile/profile.routes';
 
 const router = Router();
 
@@ -55,5 +56,6 @@ router.use('/answers', answersRouter);
 router.use('/questions', aiAssistanceRouter);
 router.use('/sessions', sessionSummaryRouter);
 router.use('/history', historyRouter);
+router.use('/profile', profileRouter);
 
 export default router;

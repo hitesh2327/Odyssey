@@ -5,17 +5,75 @@
 :root {
   --background: #fafafa;
   --foreground: #171717;
+
+  /* Profile Theme - Light */
+  --ink: #161B33;
+  --ink-soft: #2B3358;
+  --parchment: #F8F5EE;
+  --card: #FFFFFF;
+  --brass: #B8863B;
+  --brass-deep: #8C641F;
+  --brass-tint: #F1E3C7;
+  --harbor: #2F5C8A;
+  --sea: #3F7D5C;
+  --sea-tint: #E3EEE6;
+  --coral: #BD5B3C;
+  --coral-tint: #F4E4DD;
+  --line: rgba(22, 27, 51, 0.10);
+  --line-strong: rgba(22, 27, 51, 0.16);
+  --text: #1C2240;
+  --text-muted: #6B6F85;
+  --text-faint: #9A9DAE;
+
+  /* Additional Backgrounds - Light */
+  --passport-bg: #FFFEFA;
+  --stat-sessions-bg: #E7EEF5;
+  --locked-bg: #FAFAF8;
+  --locked-border: #E7E7E2;
+  --locked-icon-bg: #E7E7E2;
+  --topic-bg: #F0F0EC;
+  --progress-bg: #EEEAE0;
+  --chip-bg: #F7F5EF;
+  --chip-hover: #EAE8E2;
 }
 
 .dark {
   --background: #0a0a0a;
   --foreground: #ededed;
+
+  /* Profile Theme - Dark */
+  --ink: #E2E8F0;
+  --ink-soft: #CBD5E1;
+  --parchment: #0f111a;
+  --card: #161b26;
+  --brass: #D4A373;
+  --brass-deep: #FAEDCD;
+  --brass-tint: #3A2F1D;
+  --harbor: #6B9AC4;
+  --sea: #659A7A;
+  --sea-tint: #1C3325;
+  --coral: #D97A62;
+  --coral-tint: #3D221A;
+  --line: rgba(255, 255, 255, 0.10);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --text: #E2E8F0;
+  --text-muted: #94A3B8;
+  --text-faint: #64748B;
+
+  /* Additional Backgrounds - Dark */
+  --passport-bg: #161b26;
+  --stat-sessions-bg: #1F2937;
+  --locked-bg: #111827;
+  --locked-border: #374151;
+  --locked-icon-bg: #374151;
+  --topic-bg: #1F2937;
+  --progress-bg: #374151;
+  --chip-bg: #1F2937;
+  --chip-hover: #374151;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  @apply bg-background text-foreground font-sans antialiased;
   min-height: 100vh;
   margin: 0;
 }

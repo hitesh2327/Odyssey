@@ -12,7 +12,7 @@ import swaggerDocument from './config/swagger.json';
 const app = express();
 
 // Enable Helmet for setting security-related HTTP headers
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
 // Enable Cross-Origin Resource Sharing with credentials support
 app.use(
@@ -48,6 +48,11 @@ app.use((req, _res, next) => {
 
 // Swagger Documentation UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// Serve avatars statically
+import path from 'path';
+import { config } from './config';
+app.use('/uploads/avatars', express.static(path.join(process.cwd(), config.UPLOAD_DIR, 'avatars')));
 
 // API Routes entrypoint
 app.use('/api/v1', apiRouter);

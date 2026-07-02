@@ -107,17 +107,6 @@ export class AIAssistanceService {
           },
         });
 
-        // await tx.aIInteraction.create({
-        //   data: {
-        //     sessionId: session.id,
-        //     questionId,
-        //     type: 'HINT_REQUEST',
-        //     prompt: userPrompt,
-        //     response: fullContent,
-        //     modelName: config.GROQ_MODEL || 'llama-3.3-70b-versatile',
-        //     promptVersion: 'AI_STREAM_V1',
-        //   },
-        // });
         await chatMemoryService.addMessage(session.id, {
           role: 'user',
           content: userPrompt,

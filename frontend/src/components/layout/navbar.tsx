@@ -3,16 +3,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth.store';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { Modal } from '@/components/ui/modal';
 import { UserCircle, LogOut, ChevronDown, User } from 'lucide-react';
 
 export function Navbar() {
   const { user, logout } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = async () => {
@@ -43,13 +42,24 @@ export function Navbar() {
           <div className="flex items-center space-x-4">
             {user && (
               <>
-                <Link href="/history" className="text-sm font-medium text-slate-700 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400 transition-colors">
+                <Link 
+                  href="/history" 
+                  className={`text-sm font-medium transition-colors ${
+                    pathname === '/history' 
+                      ? 'text-indigo-600 dark:text-indigo-400' 
+                      : 'text-slate-700 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400'
+                  }`}
+                >
                   History
                 </Link>
                 <div className="relative" ref={dropdownRef}>
                   <button 
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 p-1.5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    className={`flex items-center gap-2 p-1.5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${
+                      pathname === '/profile'
+                        ? 'bg-indigo-50 dark:bg-indigo-900/20 ring-2 ring-indigo-500/20'
+                        : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
                   >
                     {user.avatarUrl ? (
                       <img src={user.avatarUrl} alt="Avatar" className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700" />
@@ -66,16 +76,18 @@ export function Navbar() {
                         <p className="text-xs text-slate-500 truncate">{user.email}</p>
                       </div>
                       
-                      <button 
-                        onClick={() => {
-                          setDropdownOpen(false);
-                          setProfileModalOpen(true);
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors w-full text-left"
+                      <Link 
+                        href="/profile"
+                        onClick={() => setDropdownOpen(false)}
+                        className={`flex items-center gap-2 px-4 py-2 text-sm transition-colors w-full text-left ${
+                          pathname === '/profile'
+                            ? 'text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-900/10 font-medium'
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                        }`}
                       >
                         <User className="w-4 h-4" />
                         Profile
-                      </button>
+                      </Link>
 
                       <div className="flex items-center justify-between px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                         <span className="text-sm text-slate-700 dark:text-slate-300 flex items-center gap-2">Theme</span>
@@ -99,49 +111,6 @@ export function Navbar() {
           </div>
         </div>
       </nav>
-
-      {user && (
-        <Modal 
-          isOpen={profileModalOpen} 
-          onClose={() => setProfileModalOpen(false)} 
-          title="User Profile"
-          className="max-w-2xl w-[90vw] md:w-full min-h-[50vh] max-h-[90vh] overflow-y-auto"
-        >
-          <div className="flex flex-col md:flex-row gap-8 items-center md:items-start p-4">
-            <div className="flex-shrink-0">
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt="Avatar" className="w-32 h-32 rounded-full border-4 border-indigo-100 dark:border-indigo-900/50 shadow-md object-cover" />
-              ) : (
-                <UserCircle className="w-32 h-32 text-slate-300 dark:text-slate-600" />
-              )}
-            </div>
-            <div className="flex flex-col gap-4 flex-grow w-full">
-              <div className="flex flex-col gap-1">
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{user.name}</h3>
-                <p className="text-slate-500 dark:text-slate-400">{user.email}</p>
-              </div>
-
-              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-100 dark:border-slate-800 w-full mt-4">
-                <h4 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">Account Details</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs text-slate-400 dark:text-slate-500">User ID</span>
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 break-all">{user.id}</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs text-slate-400 dark:text-slate-500">Provider</span>
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 capitalize">{user.provider || 'Email'}</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs text-slate-400 dark:text-slate-500">Email Verified</span>
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{user.isEmailVerified ? 'Yes' : 'No'}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Modal>
-      )}
     </>
   );
 }

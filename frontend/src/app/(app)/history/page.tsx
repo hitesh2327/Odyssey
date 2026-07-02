@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
 import { useAuthStore } from '@/store/auth.store';
 import { useHistory } from '@/hooks/use-history';
-import { Navbar } from '@/components/layout/navbar';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PlayCircle, ArrowRight, CheckCircle, XCircle, Clock, Activity, Filter } from 'lucide-react';
 import { format } from 'date-fns';
+import { PageHeader } from '@/components/shell/PageHeader';
 
 export default function HistoryPage() {
   const { isLoading: isAuthLoading } = useProtectedRoute();
@@ -62,17 +62,12 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-12">
-      <Navbar />
-
-      <main className="container mx-auto max-w-6xl px-4 py-8 space-y-8">
-        
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Assessment History</h1>
-            <p className="mt-2 text-gray-500 dark:text-gray-400">Review your past performance and resume active sessions.</p>
-          </div>
-        </div>
+    <>
+      <PageHeader
+        eyebrow="History · Past Sessions"
+        title="Assessment History"
+        subtitle="Review your past performance and resume active sessions."
+      />
 
         <Card>
           <CardHeader className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800">
@@ -256,7 +251,6 @@ export default function HistoryPage() {
           </CardContent>
         </Card>
 
-      </main>
-    </div>
+    </>
   );
 }
