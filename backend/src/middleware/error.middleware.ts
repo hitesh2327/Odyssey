@@ -10,17 +10,18 @@ export const errorMiddleware = (
   res: Response,
   _next: NextFunction, // eslint-disable-line @typescript-eslint/no-unused-vars
 ) => {
-  logger.error(`[${req.method}] ${req.path} - Error: ${err.message}`, {
-    stack: err.stack,
-  });
-
-  if (err instanceof ApiError) {
+  if (err instanceof ApiError && err.statusCode < 500) {
+    logger.warn(`[${req.method}] ${req.path} - Client Error (${err.statusCode}): ${err.message}`);
     return res.status(err.statusCode).json({
       success: false,
       message: err.message,
-      ...(err.payload ? { payload: err.payload } : {}),
+      ...(err.data ? { data: err.data } : {}),
     });
   }
+
+  logger.error(`[${req.method}] ${req.path} - Error: ${err.message}`, {
+    stack: err.stack,
+  });
 
   // Handle generic JWT signature or expired errors
   if (err.name === 'JsonWebTokenError') {

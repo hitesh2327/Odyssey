@@ -1,0 +1,286 @@
+<html><head><meta charset="utf-8"/><title>Odyssey Test Report</title><style type="text/css">:root {
+  --text-primary: #111;
+  --text-secondary: #4f4f4f;
+  --success: #006633;
+  --success-bright: #80ffbf;
+  --danger: #cc071e;
+  --danger-bright: #fbdfe0;
+  --warning: #995c00;
+  --warning-bright: #ffeea8;
+  --panel: #eee;
+  --border: #949494;
+  --disabled: #6b6b6b;
+}
+
+html,
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  margin: 0;
+  padding: 0;
+  color: var(--text-primary);
+}
+body {
+  padding: 2rem 1rem;
+}
+.jesthtml-content {
+  margin: 0 auto;
+  max-width: 70rem;
+}
+header {
+  display: flex;
+  align-items: center;
+}
+#title {
+  margin: 0;
+  flex-grow: 1;
+}
+#logo {
+  height: 4rem;
+}
+#timestamp {
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+}
+
+#metadata-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.additional-information-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+}
+
+/** SUMMARY */
+#summary {
+  color: var(--text-primary);
+  display: flex;
+  font-family: monospace;
+  font-size: 1rem;
+}
+#summary > div {
+  margin-right: 0.5rem;
+  background: var(--panel);
+  padding: 1rem;
+  min-width: 15rem;
+}
+#summary > div:last-child {
+  margin-right: 0;
+}
+@media only screen and (max-width: 720px) {
+  #summary {
+    flex-direction: column;
+  }
+  #summary > div {
+    margin-right: 0;
+    margin-top: 1rem;
+  }
+  #summary > div:first-child {
+    margin-top: 0;
+  }
+}
+
+.summary-total {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.summary-passed {
+  color: var(--success);
+  border-left: 0.4rem solid var(--success);
+  padding-left: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.summary-failed,
+.summary-obsolete-snapshots {
+  color: var(--danger);
+  border-left: 0.4rem solid var(--danger);
+  padding-left: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.summary-pending {
+  color: var(--warning);
+  border-left: 0.4rem solid var(--warning);
+  padding-left: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.summary-empty {
+  color: var(--disabled);
+  border-left: 0.4rem solid var(--disabled);
+  margin-bottom: 0.15rem;
+}
+
+.test-result {
+  padding: 1rem;
+  margin-bottom: 0.25rem;
+}
+.test-result:last-child {
+  border: 0;
+}
+.test-result.passed {
+  background-color: var(--success-bright);
+  color: var(--success);
+}
+.test-result.failed {
+  background-color: var(--danger-bright);
+  color: var(--danger);
+}
+.test-result.pending {
+  background-color: var(--warning-bright);
+  color: var(--warning);
+}
+
+.test-info {
+  display: flex;
+  justify-content: space-between;
+}
+.test-suitename {
+  width: 20%;
+  text-align: left;
+  font-weight: bold;
+  word-break: break-word;
+}
+.test-title {
+  width: 40%;
+  text-align: left;
+  font-style: italic;
+}
+.test-status {
+  width: 20%;
+  text-align: right;
+}
+.test-duration {
+  width: 10%;
+  text-align: right;
+  font-size: 0.85rem;
+}
+
+.failureMessages {
+  padding: 0 1rem;
+  margin-top: 1rem;
+  border-top: 1px dashed var(--danger);
+}
+.failureMessages.suiteFailure {
+  border-top: none;
+}
+.failureMsg {
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+
+.suite-container {
+  margin-bottom: 1rem;
+}
+.suite-info {
+  padding: 1rem;
+  background-color: var(--panel);
+  color: var(--text-secondary);
+  border: 0.15rem solid;
+  border-color: var(--panel);
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+.suite-info:hover {
+  border-color: var(--border);
+  cursor: pointer;
+}
+.suite-info .suite-path {
+  word-break: break-all;
+  flex-grow: 1;
+  font-family: monospace;
+  font-size: 1rem;
+}
+.suite-info .suite-time {
+  margin-left: 1rem;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.85rem;
+}
+.suite-info .suite-time.warn {
+  background-color: var(--danger);
+  color: #fff;
+}
+.suite-info:before {
+  content: "\2303";
+  display: inline-block;
+  margin-right: 1rem;
+  transform: rotate(180deg) translateY(0.15rem);
+}
+.suite-container[open] .suite-info:before {
+  transform: rotate(0deg) translateY(0.15rem);
+}
+
+/* CONSOLE LOGS */
+.suite-consolelog {
+  margin-bottom: 0.25rem;
+  padding: 1rem;
+  background-color: var(--panel);
+}
+.suite-consolelog-header {
+  font-weight: bold;
+}
+.suite-consolelog-item {
+  padding: 0.5rem;
+}
+.suite-consolelog-item pre {
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+.suite-consolelog-item-origin {
+  color: var(--text-secondary);
+  font-weight: bold;
+}
+.suite-consolelog-item-message {
+  color: var(--text-primary);
+  font-size: 1rem;
+  padding: 0 0.5rem;
+}
+
+/* OBSOLETE SNAPSHOTS */
+.suite-obsolete-snapshots {
+  margin-bottom: 0.25rem;
+  padding: 1rem;
+  background-color: var(--danger-bright);
+  color: var(--danger);
+}
+.suite-obsolete-snapshots-header {
+  font-weight: bold;
+}
+.suite-obsolete-snapshots-item {
+  padding: 0.5rem;
+}
+.suite-obsolete-snapshots-item pre {
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+.suite-obsolete-snapshots-item-message {
+  color: var(--text-primary);
+  font-size: 1rem;
+  padding: 0 0.5rem;
+}
+</style></head><body><main class="jesthtml-content"><header><h1 id="title">Odyssey Test Report</h1></header><section id="metadata-container"><div id="timestamp">Started: 2026-07-05 03:59:06</div><div id="summary"><div id="suite-summary"><div class="summary-total">Suites (25)</div><div class="summary-passed ">23 passed</div><div class="summary-failed ">2 failed</div><div class="summary-pending  summary-empty">0 pending</div></div><div id="test-summary"><div class="summary-total">Tests (106)</div><div class="summary-passed ">104 passed</div><div class="summary-failed ">2 failed</div><div class="summary-pending  summary-empty">0 pending</div></div></div></section><details id="suite-1" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\integration\session-summary\session-summary.controller.test.ts</div><div class="suite-time warn">191.453s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">Session Summary Controller (Integration) &gt; POST /api/v1/sessions/:sessionId/complete</div><div class="test-title">should return 200 for a valid session belonging to the user</div><div class="test-status">passed</div><div class="test-duration">28.623s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Session Summary Controller (Integration) &gt; POST /api/v1/sessions/:sessionId/complete</div><div class="test-title">should return 403 (or 404 depending on service logic) for a session belonging to a different user</div><div class="test-status">passed</div><div class="test-duration">19.553s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Session Summary Controller (Integration) &gt; POST /api/v1/sessions/:sessionId/complete</div><div class="test-title">should return 404 for a non-existent sessionId</div><div class="test-status">passed</div><div class="test-duration">19.514s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Session Summary Controller (Integration) &gt; POST /api/v1/sessions/:sessionId/complete</div><div class="test-title">should return 400 for an invalid UUID</div><div class="test-status">passed</div><div class="test-duration">18.832s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Session Summary Controller (Integration) &gt; GET /api/v1/sessions/:sessionId/summary</div><div class="test-title">should return 200 with summary data for a valid completed session</div><div class="test-status">passed</div><div class="test-duration">22.297s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Session Summary Controller (Integration) &gt; GET /api/v1/sessions/:sessionId/summary</div><div class="test-title">should return 400 for an in-progress session</div><div class="test-status">passed</div><div class="test-duration">20.58s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Session Summary Controller (Integration) &gt; GET /api/v1/sessions/:sessionId/summary</div><div class="test-title">should return 403 (or 404) for a session belonging to a different user</div><div class="test-status">passed</div><div class="test-duration">20.096s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Session Summary Controller (Integration) &gt; GET /api/v1/sessions/:sessionId/evaluation-status</div><div class="test-title">should return 200 with evaluationStatus field for a valid session</div><div class="test-status">passed</div><div class="test-duration">19.215s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Session Summary Controller (Integration) &gt; GET /api/v1/sessions/:sessionId/evaluation-status</div><div class="test-title">should return 403 for a session belonging to a different user</div><div class="test-status">passed</div><div class="test-duration">19.216s</div></div></div></div></details><details id="suite-2" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\integration\routes\session.lifecycle.test.ts</div><div class="suite-time warn">21.105s</div></summary><div class="suite-tests"><div class="test-result failed"><div class="test-info"><div class="test-suitename">Session Lifecycle (Integration)</div><div class="test-title">should successfully complete the Session lifecycle: create -&gt; answer -&gt; complete -&gt; summary</div><div class="test-status">failed</div><div class="test-duration">19.82s</div></div><div class="failureMessages"> <pre class="failureMsg">Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 404
+    at Object.&lt;anonymous&gt; (D:\Code\Odyssey\backend\tests\integration\routes\session.lifecycle.test.ts:91:28)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</pre></div></div></div></details><details id="suite-3" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\integration\routes\profile.lifecycle.test.ts</div><div class="suite-time warn">26.412s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">Profile Lifecycle (Integration)</div><div class="test-title">should successfully complete the Profile lifecycle: GET -&gt; PATCH -&gt; Topics -&gt; Avatar -&gt; Resume -&gt; Parse &amp; Download</div><div class="test-status">passed</div><div class="test-duration">25.951s</div></div></div></div></details><details id="suite-4" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\integration\routes\ai-assistance.stream.test.ts</div><div class="suite-time warn">23.823s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">GET /api/v1/questions/:questionId/assist/stream</div><div class="test-title">should stream AI assistance chunks and terminate properly</div><div class="test-status">passed</div><div class="test-duration">23.392s</div></div></div></div></details><details id="suite-5" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\integration\routes\auth.lifecycle.test.ts</div><div class="suite-time warn">20.522s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">Auth Lifecycle (Integration)</div><div class="test-title">should successfully complete the register -&gt; verify lifecycle</div><div class="test-status">passed</div><div class="test-duration">20.065s</div></div></div></div></details><details id="suite-6" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\integration\auth\login.test.ts</div><div class="suite-time warn">18.783s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">Auth Module - Login &gt; POST /api/v1/auth/login</div><div class="test-title">should login successfully for verified user</div><div class="test-status">passed</div><div class="test-duration">4.505s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Auth Module - Login &gt; POST /api/v1/auth/login</div><div class="test-title">should reject login for unverified user with 403 EMAIL_NOT_VERIFIED</div><div class="test-status">passed</div><div class="test-duration">4.232s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Auth Module - Login &gt; POST /api/v1/auth/login</div><div class="test-title">should reject login with wrong password</div><div class="test-status">passed</div><div class="test-duration">4.033s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Auth Module - Login &gt; POST /api/v1/auth/login</div><div class="test-title">should block local login if no password is set (Google account)</div><div class="test-status">passed</div><div class="test-duration">4.391s</div></div></div></div></details><details id="suite-7" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\integration\auth\register.test.ts</div><div class="suite-time warn">15.237s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">Auth Module - Register &gt; POST /api/v1/auth/register</div><div class="test-title">should successfully register a valid user</div><div class="test-status">passed</div><div class="test-duration">5.506s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Auth Module - Register &gt; POST /api/v1/auth/register</div><div class="test-title">should reject registration if email is already in use</div><div class="test-status">passed</div><div class="test-duration">5.216s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Auth Module - Register &gt; POST /api/v1/auth/register</div><div class="test-title">should reject registration if password is under 8 chars</div><div class="test-status">passed</div><div class="test-duration">3.393s</div></div></div></div></details><details id="suite-8" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\integration\health\health.test.ts</div><div class="suite-time">1.256s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">Health Module &gt; GET /api/v1/health</div><div class="test-title">should return 200 and system status</div><div class="test-status">passed</div><div class="test-duration">0.245s</div></div></div></div></details><details id="suite-9" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\unit\lib\otp.unit.test.ts</div><div class="suite-time">0.093s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">OTP Library &gt; Locks &amp; Cooldowns</div><div class="test-title">Branch 1: should treat expired lock (unlocksAt &lt; now) as no lock and delete it</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">OTP Library &gt; Locks &amp; Cooldowns</div><div class="test-title">Branch 2: should return active lock (unlocksAt &gt; now)</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">OTP Library &gt; Locks &amp; Cooldowns</div><div class="test-title">Branch 3: should block sending if resendCount is &gt;= 3 and upsert lock</div><div class="test-status">passed</div><div class="test-duration">0.004s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">OTP Library &gt; Locks &amp; Cooldowns</div><div class="test-title">Branch 4: should calculate nextResendAllowedAt with healthy server (resend scaling)</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">OTP Library &gt; Locks &amp; Cooldowns</div><div class="test-title">Branch 5: should calculate nextResendAllowedAt with degraded server (flat 60s)</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">OTP Library &gt; Verification branches</div><div class="test-title">Branch 6: OTP match on the first attempt</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">OTP Library &gt; Verification branches</div><div class="test-title">Branch 7: OTP mismatch on attempt 1</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">OTP Library &gt; Verification branches</div><div class="test-title">Branch 8: OTP mismatch on attempt 2</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">OTP Library &gt; Verification branches</div><div class="test-title">Branch 9: OTP mismatch on attempt 3 triggering a lock</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div></div></details><details id="suite-10" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\unit\services\cache.service.unit.test.ts</div><div class="suite-time">0.084s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">CacheService &gt; get</div><div class="test-title">should return null if client is not available</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CacheService &gt; get</div><div class="test-title">should return parsed data on cache hit</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CacheService &gt; get</div><div class="test-title">should return null on cache miss</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CacheService &gt; get</div><div class="test-title">should catch error and return null on Redis failure</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CacheService &gt; set</div><div class="test-title">should do nothing if client is not available</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CacheService &gt; set</div><div class="test-title">should set data with TTL and not track if userId is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CacheService &gt; set</div><div class="test-title">should set data and track key if userId is provided</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CacheService &gt; set</div><div class="test-title">should catch error on set failure</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CacheService &gt; set</div><div class="test-title">should catch error if tracking fails</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CacheService &gt; delete</div><div class="test-title">should do nothing if client is not available</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CacheService &gt; delete</div><div class="test-title">should call del on client</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CacheService &gt; delete</div><div class="test-title">should catch error on delete failure</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CacheService &gt; invalidateUserCache</div><div class="test-title">should do nothing if client is not available</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CacheService &gt; invalidateUserCache</div><div class="test-title">should delete keys from set and the set itself</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CacheService &gt; invalidateUserCache</div><div class="test-title">should only delete the set if no tracked keys exist</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CacheService &gt; invalidateUserCache</div><div class="test-title">should catch error on invalidation failure</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div></div></details><details id="suite-11" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\unit\modules\auth\auth.service.unit.test.ts</div><div class="suite-time">0.134s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthService &gt; register</div><div class="test-title">Branch: Duplicate email registration conflict</div><div class="test-status">passed</div><div class="test-duration">0.004s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthService &gt; register</div><div class="test-title">should register successfully and return requiresVerification: true</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthService &gt; login</div><div class="test-title">Branch: User not found on login</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthService &gt; login</div><div class="test-title">Branch: Password mismatch on login</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthService &gt; login</div><div class="test-title">Branch: Login throws 403 when isEmailVerified is false</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthService &gt; googleAuth</div><div class="test-title">Branch: Google auth matching an existing user</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthService &gt; googleAuth</div><div class="test-title">Branch: Google auth triggering new user creation</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-12" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\unit\modules\answers\answers.service.unit.test.ts</div><div class="suite-time">0.08s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">AnswersService &gt; submitAnswer</div><div class="test-title">Branch: Requesting a session that belongs to a different user</div><div class="test-status">passed</div><div class="test-duration">0.003s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AnswersService &gt; submitAnswer</div><div class="test-title">Branch: Submitting an answer to a question that already has an answer row (duplicate submission behaviour)</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AnswersService &gt; submitAnswer</div><div class="test-title">should cap question order at totalQuestions</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div></div></details><details id="suite-13" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\unit\modules\dashboard\dashboard.service.unit.test.ts</div><div class="suite-time">0.082s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">DashboardService &gt; getOverview</div><div class="test-title">should return cached data if available</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">DashboardService &gt; getOverview</div><div class="test-title">should query DB and aggregate overview if not in cache</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">DashboardService &gt; getHistory</div><div class="test-title">should return cached data if available</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">DashboardService &gt; getHistory</div><div class="test-title">should query DB if not cached</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">DashboardService &gt; getPerformanceByTopic</div><div class="test-title">should return cached data if available</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">DashboardService &gt; getPerformanceByTopic</div><div class="test-title">should query DB and calculate performance manually if not cached</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div></div></details><details id="suite-14" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\unit\modules\auth\auth.controller.unit.test.ts</div><div class="suite-time">0.079s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthController &gt; register</div><div class="test-title">Branch: register() returns requiresVerification: true and does NOT set an auth cookie</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthController &gt; changeEmailVerify</div><div class="test-title">Branch: changeEmailVerify() reads newEmail from OTP record before deleting it and updates user row</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthController &gt; resetPasswordVerify</div><div class="test-title">Branch: resetPasswordVerify() updates passwordHash and then clears OtpRecord and OtpLock</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-15" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\unit\modules\ai-assistance\ai-assistance.service.unit.test.ts</div><div class="suite-time">0.11s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">AIAssistanceService &gt; streamAssistance</div><div class="test-title">should throw 404 if question is not found</div><div class="test-status">passed</div><div class="test-duration">0.003s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AIAssistanceService &gt; streamAssistance</div><div class="test-title">should write error and end if assistance was already used</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AIAssistanceService &gt; streamAssistance</div><div class="test-title">should write error and end if GROQ_API_KEY is missing</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AIAssistanceService &gt; streamAssistance</div><div class="test-title">should stream successfully and save to DB</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AIAssistanceService &gt; streamAssistance</div><div class="test-title">should catch error during streaming and write error</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-16" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\unit\modules\profile\profile.service.unit.test.ts</div><div class="suite-time">0.113s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProfileService &gt; getProfile</div><div class="test-title">should auto-create a profile row when none exists</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProfileService &gt; setPrimaryResume</div><div class="test-title">should set other resumes to false and target to true in a transaction</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProfileService &gt; setPrimaryResume</div><div class="test-title">should throw ApiError if resume not found or belongs to another user</div><div class="test-status">passed</div><div class="test-duration">0.003s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProfileService &gt; deleteResume</div><div class="test-title">should promote the next most recent resume if the deleted one was primary</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProfileService &gt; deleteResume</div><div class="test-title">should not promote if the deleted resume was not primary</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-17" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\unit\modules\sessions\sessions.service.unit.test.ts</div><div class="suite-time">0.088s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">SessionsService &gt; createSession</div><div class="test-title">Branch: Creating a session with an invalid/non-existent topic creates it</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">SessionsService &gt; getSessionById</div><div class="test-title">Branch: Requesting a session that belongs to a different user</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div></div></details><details id="suite-18" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\unit\middleware\auth.middleware.unit.test.ts</div><div class="suite-time">0.091s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">Auth Middleware</div><div class="test-title">should return 401 if no token is provided in cookies or headers</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Auth Middleware</div><div class="test-title">should return 401 if JWT is invalid</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Auth Middleware</div><div class="test-title">should call next() and attach user to req if token is valid and user exists</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-19" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\unit\services\chat-memory.service.unit.test.ts</div><div class="suite-time">0.093s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">ChatMemoryService &gt; getMessages</div><div class="test-title">should load messages from DB on first call and store in memory Map</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ChatMemoryService &gt; getMessages</div><div class="test-title">should return cached messages from memory Map on subsequent calls</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ChatMemoryService &gt; addMessage</div><div class="test-title">should add message to DB and push to Map</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ChatMemoryService &gt; addMessage</div><div class="test-title">should initialize empty array in Map if it did not exist</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ChatMemoryService &gt; clear</div><div class="test-title">should remove session from Map</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ChatMemoryService &gt; refresh</div><div class="test-title">should delete from Map and reload from DB</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-20" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\unit\modules\session-summary\session-summary.service.unit.test.ts</div><div class="suite-time">0.665s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">SessionSummaryService &gt; completeSession</div><div class="test-title">Branch: Session status transition from IN_PROGRESS to COMPLETED and evaluationStatus update</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result failed"><div class="test-info"><div class="test-suitename">SessionSummaryService &gt; completeSession</div><div class="test-title">should throw if not all questions answered</div><div class="test-status">failed</div><div class="test-duration"> </div></div><div class="failureMessages"> <pre class="failureMsg">ApiError: Complete all questions before finishing the assessment.
+    at D:\Code\Odyssey\backend\src\modules\session-summary\session-summary.service.ts:36:15
+    at async Object.&lt;anonymous&gt; (D:\Code\Odyssey\backend\tests\unit\modules\session-summary\session-summary.service.unit.test.ts:85:9)
+    at async SessionSummaryService.completeSession (D:\Code\Odyssey\backend\src\modules\session-summary\session-summary.service.ts:10:5)
+    at async Object.&lt;anonymous&gt; (D:\Code\Odyssey\backend\tests\unit\modules\session-summary\session-summary.service.unit.test.ts:88:7)</pre></div></div></div></details><details id="suite-21" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\unit\modules\profile\waypoints.service.unit.test.ts</div><div class="suite-time">0.08s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">WaypointsService &gt; checkAndUnlock</div><div class="test-title">should cover all 5 waypoint conditions correctly</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">WaypointsService &gt; checkAndUnlock</div><div class="test-title">should not unlock if condition is false</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">WaypointsService &gt; checkAndUnlock</div><div class="test-title">should not unlock already unlocked waypoints</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div></div></details><details id="suite-22" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\unit\modules\history\history.service.unit.test.ts</div><div class="suite-time">0.081s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">HistoryService &gt; getHistory</div><div class="test-title">should return cached data if available</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">HistoryService &gt; getHistory</div><div class="test-title">should query DB and format response if not in cache</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-23" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\unit\modules\evaluation\evaluation.service.unit.test.ts</div><div class="suite-time">0.079s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">EvaluationService &gt; evaluateSessionBackground</div><div class="test-title">should do nothing if session is not found</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">EvaluationService &gt; evaluateSessionBackground</div><div class="test-title">should set session to FAILED if all question evaluations fail</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">EvaluationService &gt; evaluateSessionBackground</div><div class="test-title">should parse score successfully, compute overall summary, and complete session</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">EvaluationService &gt; evaluateSessionBackground</div><div class="test-title">should use fallback text if summary generation fails</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">EvaluationService &gt; evaluateSessionBackground</div><div class="test-title">should fail session evaluation if GROQ_API_KEY is missing</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-24" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\unit\prompts\prompts.unit.test.ts</div><div class="suite-time">0.083s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">Prompts &gt; EvaluationPrompt</div><div class="test-title">should build system prompt correctly</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Prompts &gt; EvaluationPrompt</div><div class="test-title">should build user prompt correctly</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Prompts &gt; QuestionPromptTemplate</div><div class="test-title">should build correctly with provided inputs</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Prompts &gt; ResumeParserPromptTemplate</div><div class="test-title">should build correctly with provided resume text and topics</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Prompts &gt; StreamAssistance</div><div class="test-title">should build system prompt correctly</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Prompts &gt; StreamAssistance</div><div class="test-title">should build user prompt correctly</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div></div></details><details id="suite-25" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">D:\Code\Odyssey\backend\tests\unit\utils\api-error.unit.test.ts</div><div class="suite-time">0.073s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">ApiError</div><div class="test-title">should instantiate correctly with required arguments</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ApiError</div><div class="test-title">should store optional data payload</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details></main></body></html>

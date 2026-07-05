@@ -7,6 +7,7 @@ import { authService } from '../../services/auth.service';
 import { useAuthStore } from '../../store/auth.store';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
 interface AccountSecurityCardProps {
   profile: ApiProfile;

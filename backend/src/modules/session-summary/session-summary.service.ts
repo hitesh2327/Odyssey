@@ -7,9 +7,6 @@ import { logger } from '../../lib/logger';
 
 export class SessionSummaryService {
   public async completeSession(userId: string, sessionId: string): Promise<void> {
-    try {
-      
-    
     await prisma.$transaction(async (tx) => {
       // 1. Validate Session Exists
       const session = await tx.assessmentSession.findUnique({
@@ -57,9 +54,6 @@ export class SessionSummaryService {
     evaluationService.evaluateSessionBackground(sessionId).catch((err) => {
       logger.error(`Background evaluation failed to start for session ${sessionId}:`, err);
     });
-    } catch (error) {
-      logger.error(`Failed to complete session ${sessionId}:`, error);
-    }
   }
 
   public async getEvaluationStatus(userId: string, sessionId: string): Promise<string> {

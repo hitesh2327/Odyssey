@@ -49,12 +49,13 @@ export class AuthService {
     });
 
     // Send verify email OTP
-    await sendOtp('verify_email', user.id, user.email, undefined);
+    const { nextResendAllowedAt } = await sendOtp('verify_email', user.id, user.email, undefined);
 
     return { 
       userId: user.id, 
       email: user.email, 
-      requiresVerification: true 
+      requiresVerification: true,
+      nextResendAllowedAt
     };
   }
 
@@ -70,8 +71,8 @@ export class AuthService {
       throw new ApiError(401, 'Invalid email or password');
     }
 
-    // Block local login for Google accounts
-    if (user.provider === 'google' || !user.passwordHash) {
+    // Block local login if no password is set
+    if (!user.passwordHash) {
       throw new ApiError(400, 'Please continue with Google.');
     }
 

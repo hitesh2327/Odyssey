@@ -25,6 +25,7 @@ export class AuthController {
         requiresVerification: true,
         userId: result.userId,
         email: result.email,
+        nextResendAllowedAt: result.nextResendAllowedAt,
       });
     } catch (error) {
       next(error);
@@ -117,11 +118,12 @@ export class AuthController {
         throw new ApiError(400, 'Email address is already verified');
       }
 
-      await sendOtp('verify_email', userId, user.email, undefined);
+      const { nextResendAllowedAt } = await sendOtp('verify_email', userId, user.email, undefined);
 
       res.status(200).json({
         success: true,
         message: 'OTP verification code resent successfully',
+        nextResendAllowedAt,
       });
     } catch (error) {
       next(error);
@@ -144,11 +146,12 @@ export class AuthController {
       }
 
       // Send OTP to new email address
-      await sendOtp('change_email', userId, req.user!.email, newEmailLower);
+      const { nextResendAllowedAt } = await sendOtp('change_email', userId, req.user!.email, newEmailLower);
 
       res.status(200).json({
         success: true,
         message: 'Verification OTP sent to your new email',
+        nextResendAllowedAt,
       });
     } catch (error) {
       next(error);
@@ -219,16 +222,14 @@ export class AuthController {
         return;
       }
 
-      if (user.provider === 'google') {
-        throw new ApiError(400, 'Google accounts cannot reset password via OTP');
-      }
 
       // Send OTP to user's email
-      await sendOtp('reset_password', emailLower, emailLower, undefined);
+      const { nextResendAllowedAt } = await sendOtp('reset_password', emailLower, emailLower, undefined);
 
       res.status(200).json({
         success: true,
         message: 'If that email exists, a password reset code has been sent',
+        nextResendAllowedAt,
       });
     } catch (error) {
       next(error);
@@ -289,15 +290,13 @@ export class AuthController {
         throw new ApiError(404, 'User not found');
       }
 
-      if (user.provider === 'google') {
-        throw new ApiError(400, 'Google accounts cannot reset password via OTP');
-      }
 
-      await sendOtp('reset_password', emailLower, emailLower, undefined);
+      const { nextResendAllowedAt } = await sendOtp('reset_password', emailLower, emailLower, undefined);
 
       res.status(200).json({
         success: true,
         message: 'Password reset OTP code resent successfully',
+        nextResendAllowedAt,
       });
     } catch (error) {
       next(error);

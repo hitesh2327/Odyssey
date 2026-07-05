@@ -1,150 +1,217 @@
 import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 import { ApiError } from '../utils/ApiError';
-import { cacheService } from '../services/cache.service';
-import { redisService } from './redis';
+import { prisma } from './prisma';
 import { emailService } from './email';
-import { OtpType, OtpRecord, LockRecord } from '../types/otp';
-
-const OTP_TTL = 600; // 10 minutes
-const LOCK_TTL = 86400; // 24 hours
+import { OtpType } from '../types/otp';
+import { logger } from './logger';
+import { isServerHealthy } from './health';
 
 export function generateOtp(): string {
   return crypto.randomInt(0, 1000000).toString().padStart(6, '0');
 }
 
-function getPendingKey(type: OtpType, identifier: string): string {
-  return `odyssey:otp:pending:${type}:${identifier}`;
+export async function getOtpRecord(type: OtpType, identifier: string) {
+  const record = await prisma.otpRecord.findUnique({
+    where: {
+      identifier_type: { identifier, type },
+    },
+  });
+
+  if (!record || record.expiresAt < new Date()) {
+    return null;
+  }
+
+  return record;
 }
 
-function getLockKey(type: OtpType, identifier: string): string {
-  return `odyssey:otp:lock:${type}:${identifier}`;
+export async function getLockRecord(type: OtpType, identifier: string) {
+  const lock = await prisma.otpLock.findUnique({
+    where: {
+      identifier_type: { identifier, type },
+    },
+  });
+
+  if (!lock) {
+    return null;
+  }
+
+  if (lock.unlocksAt < new Date()) {
+    // Expired lock — treat as no lock, and delete the stale row
+    await prisma.otpLock.delete({
+      where: { identifier_type: { identifier, type } },
+    });
+    return null;
+  }
+
+  return lock;
 }
 
-export async function getOtpRecord(type: OtpType, identifier: string): Promise<OtpRecord | null> {
-  return cacheService.get<OtpRecord>(getPendingKey(type, identifier));
-}
-
-export async function getLockRecord(type: OtpType, identifier: string): Promise<LockRecord | null> {
-  return cacheService.get<LockRecord>(getLockKey(type, identifier));
-}
-
-export async function sendOtp(type: OtpType, identifier: string, email: string, newEmail?: string): Promise<void> {
-  // 1. Check lock record
+export async function sendOtp(type: OtpType, identifier: string, email: string, newEmail?: string): Promise<{ nextResendAllowedAt: Date }> {
+  // 1. Check lock
   const lock = await getLockRecord(type, identifier);
+  
   if (lock && lock.reason) {
     throw new ApiError(429, 'Too many attempts. Try again after 24 hours.');
   }
 
-  // 2. Get current resend count
+  const now = new Date();
+
+  // Progressive cooldown check
+  if (lock && lock.nextResendAllowedAt && now < lock.nextResendAllowedAt) {
+    throw new ApiError(429, 'Please wait before requesting another OTP.', {
+      nextResendAllowedAt: lock.nextResendAllowedAt,
+    });
+  }
+
+  // 2. Get resendCount
   const currentResendCount = lock ? lock.resendCount : 0;
 
-  // 3. Check resend limit
+  // 3. Check resend limit (if this request puts it AT 3, it's blocked from SENDING)
+  // Wait, the instructions say: If resendCount >= 3 -> upsert OtpLock with reason:'max_resends'
   if (currentResendCount >= 3) {
-    const updatedLock: LockRecord = {
-      lockedAt: new Date().toISOString(),
-      reason: 'max_resends',
-      resendCount: currentResendCount,
-    };
-    await cacheService.set(getLockKey(type, identifier), updatedLock, LOCK_TTL);
+    await prisma.otpLock.upsert({
+      where: { identifier_type: { identifier, type } },
+      create: {
+        identifier,
+        type,
+        reason: 'max_resends',
+        resendCount: currentResendCount,
+        unlocksAt: new Date(Date.now() + 86_400_000), // now + 24h
+      },
+      update: {
+        reason: 'max_resends',
+        unlocksAt: new Date(Date.now() + 86_400_000),
+      },
+    });
     throw new ApiError(429, 'Too many attempts. Try again after 24 hours.');
   }
 
-  // 4. Generate OTP
+  // 4. Generate plaintext OTP, hash it with bcrypt
   const otp = generateOtp();
+  const hash = await bcrypt.hash(otp, 10);
 
-  // 5. Store OTP record
-  const otpRecord: OtpRecord = {
-    otp,
-    attempts: 0,
-    createdAt: new Date().toISOString(),
-    ...(newEmail ? { newEmail } : {}),
-  };
-  await cacheService.set(getPendingKey(type, identifier), otpRecord, OTP_TTL);
+  // 5. Upsert OtpRecord
+  await prisma.otpRecord.upsert({
+    where: { identifier_type: { identifier, type } },
+    create: {
+      identifier,
+      type,
+      otpHash: hash,
+      attempts: 0,
+      newEmail,
+      expiresAt: new Date(Date.now() + 600_000),
+    },
+    update: {
+      otpHash: hash,
+      attempts: 0,
+      newEmail,
+      expiresAt: new Date(Date.now() + 600_000),
+      createdAt: new Date(),
+    },
+  });
 
-  // 6. Update lock record resendCount
+  // Calculate nextResendAllowedAt with health override
+  const healthy = await isServerHealthy();
   const nextResendCount = currentResendCount + 1;
-  const newLockRecord: LockRecord = {
-    lockedAt: lock ? lock.lockedAt : new Date().toISOString(),
-    reason: nextResendCount >= 3 ? 'max_resends' : (undefined as any), // Omit or set undefined
-    resendCount: nextResendCount,
-  };
-  // Strip undefined fields for clean JSON
-  if (newLockRecord.reason === undefined) {
-    delete (newLockRecord as any).reason;
-  }
-  await cacheService.set(getLockKey(type, identifier), newLockRecord, LOCK_TTL);
+  const cooldowns = healthy
+    ? [0, 60, 180, 300]   // [initial, after 1st, after 2nd, after 3rd] seconds
+    : [0, 60,  60,  60];  // degraded: all resends use 1 minute
+  
+  const cooldownSeconds = cooldowns[nextResendCount] ?? 300;
+  const nextResendAllowedAt = new Date(Date.now() + cooldownSeconds * 1000);
+
+  // 6. Upsert OtpLock to increment resendCount
+  await prisma.otpLock.upsert({
+    where: { identifier_type: { identifier, type } },
+    create: {
+      identifier,
+      type,
+      reason: '',
+      resendCount: 1,
+      unlocksAt: new Date(Date.now() + 86_400_000),
+      nextResendAllowedAt,
+    },
+    update: {
+      resendCount: { increment: 1 },
+      nextResendAllowedAt,
+    },
+  });
 
   // 7. Send Email
-  // If verifying email or changing email, user name can be passed if available, otherwise undefined
   await emailService.sendOtpEmail(newEmail || email, otp, type);
+
+  // 8. Log plaintext OTP at info level if NODE_ENV !== 'production'
+  if (process.env.NODE_ENV !== 'production') {
+    logger.info(`[OTP] Generated OTP for ${type} (${identifier}): ${otp}`);
+  }
+
+  return { nextResendAllowedAt };
 }
 
 export async function verifyOtp(type: OtpType, identifier: string, submittedOtp: string): Promise<void> {
-  const pendingKey = getPendingKey(type, identifier);
-  const lockKey = getLockKey(type, identifier);
-
   // 1. Check lock
   const lock = await getLockRecord(type, identifier);
-  if (lock && lock.reason) {
-    throw new ApiError(429, 'Account locked. Try again after 24 hours.');
+  // Only block verification on max_attempts. Max resends only blocks sending.
+  if (lock && lock.reason === 'max_attempts') {
+    throw new ApiError(429, 'Too many incorrect attempts. Locked for 24 hours.');
   }
 
-  const client = redisService.getClient();
-  if (!client) {
-    throw new ApiError(500, 'Redis connection is not available');
+  // 2. Get OTP record
+  const record = await getOtpRecord(type, identifier);
+  if (!record) {
+    throw new ApiError(400, 'OTP is invalid or has expired.');
   }
 
-  // Use watch/transaction block to safely read, verify, and update attempts to avoid race conditions
-  await client.watch(pendingKey);
+  // 3. Compare
+  const isMatch = await bcrypt.compare(submittedOtp, record.otpHash);
 
-  const data = await client.get(pendingKey);
-  if (!data) {
-    await client.unwatch();
-    throw new ApiError(400, 'OTP has expired. Please request a new one.');
-  }
-
-  const record = JSON.parse(data) as OtpRecord;
-
-  // 3. OTP Match Check
-  if (submittedOtp !== record.otp) {
+  // 4. If NO match
+  if (!isMatch) {
     const newAttempts = record.attempts + 1;
     const remaining = 3 - newAttempts;
 
-    const ttl = await client.ttl(pendingKey);
-    const multi = client.multi();
-
     if (newAttempts >= 3) {
-      // Create lock record with max_attempts
-      const lockRecord: LockRecord = {
-        lockedAt: new Date().toISOString(),
-        reason: 'max_attempts',
-        resendCount: lock ? lock.resendCount : 0,
-      };
-      multi.del(pendingKey);
-      // Execute transaction before setting lock key via cacheService to avoid MULTI limitations
-      const results = await multi.exec();
-      if (results === null) {
-        throw new ApiError(409, 'Conflict occurred. Please try again.');
-      }
-      await cacheService.set(lockKey, lockRecord, LOCK_TTL);
+      await prisma.otpRecord.delete({
+        where: { identifier_type: { identifier, type } },
+      });
+
+      await prisma.otpLock.upsert({
+        where: { identifier_type: { identifier, type } },
+        create: {
+          identifier,
+          type,
+          reason: 'max_attempts',
+          resendCount: 0,
+          unlocksAt: new Date(Date.now() + 86_400_000),
+        },
+        update: {
+          reason: 'max_attempts',
+          unlocksAt: new Date(Date.now() + 86_400_000),
+        },
+      });
+
       throw new ApiError(429, 'Too many incorrect attempts. Locked for 24 hours.');
     } else {
-      record.attempts = newAttempts;
-      multi.setEx(pendingKey, ttl > 0 ? ttl : OTP_TTL, JSON.stringify(record));
-      const results = await multi.exec();
-      if (results === null) {
-        throw new ApiError(409, 'Conflict occurred. Please try again.');
-      }
+      await prisma.otpRecord.update({
+        where: { identifier_type: { identifier, type } },
+        data: { attempts: newAttempts },
+      });
       throw new ApiError(400, `Incorrect OTP. ${remaining} attempt(s) remaining.`);
     }
   }
 
-  // 4. Matches successfully: delete OTP record, unwatch, and return
-  await client.unwatch();
-  await cacheService.delete(pendingKey);
+  // 5. If match
+  await prisma.otpRecord.delete({
+    where: { identifier_type: { identifier, type } },
+  });
 }
 
 export async function clearOtp(type: OtpType, identifier: string): Promise<void> {
-  await cacheService.delete(getPendingKey(type, identifier));
-  await cacheService.delete(getLockKey(type, identifier));
+  await prisma.otpRecord.deleteMany({
+    where: { identifier, type },
+  });
+  await prisma.otpLock.deleteMany({
+    where: { identifier, type },
+  });
 }

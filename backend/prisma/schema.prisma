@@ -296,3 +296,34 @@ model UserWaypoint {
   @@unique([userId, waypointId])
   @@map("user_waypoints")
 }
+
+model OtpRecord {
+  id          String   @id @default(uuid())
+  identifier  String   // userId for verify_email/change_email, lowercased email for reset_password
+  type        String   // 'verify_email' | 'change_email' | 'reset_password'
+  otpHash     String   // bcrypt hash of the OTP
+  attempts    Int      @default(0)
+  newEmail    String?  // only for change_email type
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@unique([identifier, type])
+  @@index([identifier, type])
+  @@map("otp_records")
+}
+
+model OtpLock {
+  id                  String   @id @default(uuid())
+  identifier          String
+  type                String
+  reason              String   // 'max_attempts' | 'max_resends'
+  resendCount         Int      @default(0)
+  lockedAt            DateTime @default(now())
+  unlocksAt           DateTime
+  nextResendAllowedAt DateTime?
+  createdAt           DateTime @default(now())
+
+  @@unique([identifier, type])
+  @@index([identifier, type])
+  @@map("otp_locks")
+}
